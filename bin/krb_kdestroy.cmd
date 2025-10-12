@@ -8,6 +8,10 @@ SET REALM=%USERDNSDOMAIN%
 IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
+IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
+	ECHO Invalid SQL Developer home
+	EXIT /B 1
+)
 
 SET KLISTOPTS=
 
@@ -23,7 +27,7 @@ IF "%KRB5CCNAME%" == "" (
 )
 IF "%KRB5_KTNAME%" == "" (
 	REM JDK does not recognise KRB5_KTNAME
-	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%.keytab
+	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
 )
 
 :parse

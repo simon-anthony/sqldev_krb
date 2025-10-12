@@ -23,7 +23,7 @@ IF "%KRB5CCNAME%" == "" (
 )
 IF "%KRB5_KTNAME%" == "" (
 	REM JDK does not recognise KRB5_KTNAME
-	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%.keytab
+	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
 )
 
 :parse
@@ -48,7 +48,6 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-M" (
 	SHIFT
 	SET KLISTOPTS=!KLISTOPTS! -C
-	SET SNAME=
 	SET MMFLAG=y
 ) ELSE (
 	GOTO usage
@@ -63,6 +62,10 @@ IF NOT "!KFLAG!" == "" (
 	)
 )
 IF "!MMFLAG!" == "" (
+	IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
+		ECHO Invalid SQL Developer home
+		EXIT /B 1
+	)
 	IF NOT "!KFLAG!" == "" (
 		SET NAME=!KRB5_KTNAME!
 	)

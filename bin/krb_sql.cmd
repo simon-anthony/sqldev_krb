@@ -2,11 +2,17 @@
 REM krb_sql: SQLcl using Kerberos
 
 SETLOCAL enabledelayedexpansion
+
 SET ORACLE_HOME=
 IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
 SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
+
+IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
+	ECHO Invalid SQL Developer home
+	EXIT /B 1
+)
 
 SET SQLOPTS=-kerberos -thin -noupdates
 
@@ -20,7 +26,7 @@ IF "%KRB5CCNAME%" == "" (
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
 )
 IF "%JAAS_CONFIG%" == "" (
-	REM This is the default cache unles overridden by specifying KRB5CCNAME
+	REM This is the default file used in <jre_home>\conf\security\java.security
 	SET JAAS_CONFIG=%HOMEDRIVE%%HOMEPATH%\.java.login.config
 )
 
@@ -57,10 +63,6 @@ IF "%option%" == "-k" (
 	SHIFT
 	SET KRB5_CONFIG=
 	SET KKFLAG=y
-) ELSE IF "%option%" == "-T" (
-	SHIFT
-	SET TNS_ADMIN=
-	SET TTFLAG=y
 ) ELSE IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
@@ -88,8 +90,9 @@ IF "%option%" == "-k" (
 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 	SET JFLAG=y
 ) ELSE IF "%option%" == "-a" (
-	awk "/^[A-Z0-1]* =/ { print $1 }" %TNS_ADMIN%\tnsnames.ora
-	EXIT /B 1
+	REM this option needs Git for Windowss UNIX tools
+	SHIFT
+	SET AFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -103,18 +106,37 @@ GOTO parse
 
 IF "%1" == "" GOTO usage
 
-IF NOT "!KFLG!" == "" (
-	IF NOT "!KKFLG!" == "" (
+
+REM If TNS_ADMIN not set on command line or in environment get from registry
+IF "!TNS_ADMIN!" == "" call :regquery TNS_ADMIN
+
+IF NOT "!TNS_ADMIN!" == "" (
+	IF NOT EXIST "!TNS_ADMIN!\tnsnames.ora" (
+		ECHO File !TNS_ADMIN!\tnsnames.ora does not exist 
+		EXIT /B 1
+	)
+	SET SQLOPTS=!SQLOPTS! -tnsadmin !TNS_ADMIN!
+)
+
+IF NOT "!AFLAG!" == "" (
+	IF NOT EXIST "C:\Program Files\Git\usr\bin\awk" (
+		ECHO Install Git for Windows to use this option
+		exit /B 1
+	)
+	IF "!TNS_ADMIN!" == "" (
+		ECHO TNS_ADMIN not set or no default
+		exit /B 1
+	)
+	awk "/^[A-Z0-1]* =/ { print $1 }" %TNS_ADMIN%\tnsnames.ora
+	EXIT /B 0
+)
+IF NOT "!KFLAG!" == "" (
+	IF NOT "!KKFLAG!" == "" (
 		GOTO usage
 	)
 )
-IF NOT "!TFLG!" == "" (
-	IF NOT "!TTFLG!" == "" (
-		GOTO usage
-	)
-)
-IF NOT "!CFLG!" == "" (
-	IF NOT "!CCFLG!" == "" (
+IF NOT "!CFLAG!" == "" (
+	IF NOT "!CCFLAG!" == "" (
 		GOTO usage
 	)
 )
@@ -126,9 +148,6 @@ IF NOT "!KRB5_CONFIG!" == "" (
 	) ELSE (
 		SET SQLOPTS=!SQLOPTS! -krb5_config !KRB5_CONFIG!
 	)
-)
-IF NOT "!TNS_ADMIN!" == "" (
-	SET SQLOPTS=!SQLOPTS! -tnsadmin !TNS_ADMIN!
 )
 IF NOT "!KRB5CCNAME!" == "" (
 	SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
@@ -174,11 +193,11 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-T^|-t ^<tns_admin^>] ^<tns_alias^>
+	IF "!TNS_ADMIN!" == "" call :regquery TNS_ADMIN
+	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] ^<tns_alias^>
 	ECHO   -k ^<krb5_config^> specify KRB5_CONFIG (default: !KRB5_CONFIG!^)
-	ECHO   -K               unset any default value of KRB5_CONFIG
+	ECHO   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
 	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
-	ECHO   -T               unset any default value of TNS_ADMIN
 	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -C               unset any default value of KRB5CCNAME
 	ECHO   -e               echo the command only
@@ -202,8 +221,30 @@ EXIT /B
   	ECHO doNotPrompt=true >> !JAAS_CONFIG!
   	ECHO useKeyTab=false >> !JAAS_CONFIG!
   	ECHO useTicketCache=true >> !JAAS_CONFIG!
+  	REM ECHO ticketCache=%%{LOCAL_APPDATA}\krb5cc_%%{username} >> !JAAS_CONFIG!
   	ECHO storeKey=false >> !JAAS_CONFIG!
   	ECHO renewTGT=false >> !JAAS_CONFIG!
   	ECHO debug=true; >> !JAAS_CONFIG!
 	ECHO }; >> !JAAS_CONFIG!
 EXIT /B
+
+:regquery str
+	REM If TNS_ADMIN not set on command line or in environment get from registry
+	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (call set %~1=%%i%%)
+EXIT /B 0
+
+:toUpper str
+	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
+		"j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
+		"s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0
+
+:toLower str
+	FOR %%a IN ("A=a" "B=b" "C=c" "D=d" "E=e" "F=f" "G=g" "H=h" "I=i"
+		"J=j" "K=k" "L=l" "M=m" "N=n" "O=o" "P=p" "Q=q" "R=r"
+		"S=s" "T=t" "U=u" "V=v" "W=w" "X=x" "Y=y" "Z=z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0

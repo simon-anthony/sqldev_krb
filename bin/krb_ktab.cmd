@@ -9,6 +9,10 @@ SET PRINCIPAL=%USERNAME%@%REALM%
 IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
+IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
+	ECHO Invalid SQL Developer home
+	EXIT /B 1
+)
 
 SET KTABOPTS=
 
@@ -19,7 +23,7 @@ IF "%KRB5_CONFIG%" == "" (
 )
 IF "%KRB5_KTNAME%" == "" (
 	REM JDK does not recognise KRB5_KTNAME
-	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%.keytab
+	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
 )
 
 :parse
@@ -76,9 +80,8 @@ IF NOT "!_PRIMARY!" == "" (
 	SET PRIMARY=!_PRIMARY!
 	IF NOT "!_REALM!" == "" (
 		REM realm must be uppercase
-		SET str=!_REALM!
-		FOR %%a in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) DO CALL SET "str=%%str:%%a=%%a%%"
-		SET REALM=!str!
+		CALL :toUpper _REALM
+		SET REALM=!_REALM!
 	)
 	SET PRINCIPAL=!PRIMARY!@!REALM!
 )
@@ -143,3 +146,19 @@ EXIT /B 0
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
 ENDLOCAL
 EXIT /B 1
+
+:toUpper str
+	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
+		"j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
+		"s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0
+
+:toLower str
+	FOR %%a IN ("A=a" "B=b" "C=c" "D=d" "E=e" "F=f" "G=g" "H=h" "I=i"
+		"J=j" "K=k" "L=l" "M=m" "N=n" "O=o" "P=p" "Q=q" "R=r"
+		"S=s" "T=t" "U=u" "V=v" "W=w" "X=x" "Y=y" "Z=z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0
