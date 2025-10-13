@@ -60,6 +60,9 @@ IF "%option%" == "-k" (
 		GOTO usage
 	)
 	SET TFLAG=y
+	IF NOT "!AFLAG!" == "" (
+		GOTO endparse
+	)
 ) ELSE IF "%option%" == "-K" (
 	SHIFT
 	SET KRB5_CONFIG=
@@ -91,9 +94,15 @@ IF "%option%" == "-k" (
 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 	SET JFLAG=y
 ) ELSE IF "%option%" == "-a" (
-	REM this option needs Git for Windowss UNIX tools
+	REM this option needs Git for Windows UNIX tools
 	SHIFT
 	SET AFLAG=y
+	IF "%arg%" == "" (
+		GOTO endparse
+	)
+	IF NOT "!TFLAG!" == "" (
+		GOTO endparse
+	)
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -105,10 +114,13 @@ IF "%option%" == "-k" (
 GOTO parse
 :endparse
 
-IF "%1" == "" GOTO usage
-
+IF "%1" == "" (
+	IF "!AFLAG!" == "" (
+		GOTO usage
+	)
+)
 REM If TNS_ADMIN not set on command line or in environment get from registry
-IF "!TNS_ADMIN!" == "" call :regquery TNS_ADMIN
+IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
 
 IF NOT "!TNS_ADMIN!" == "" (
 	IF NOT EXIST "!TNS_ADMIN!\tnsnames.ora" (
@@ -119,7 +131,7 @@ IF NOT "!TNS_ADMIN!" == "" (
 )
 
 IF NOT "!AFLAG!" == "" (
-	IF NOT EXIST "C:\Program Files\Git\usr\bin\awk" (
+	IF NOT EXIST "C:\Program Files\Git\usr\bin\awk.exe" (
 		ECHO Install Git for Windows to use this option
 		exit /B 1
 	)
@@ -193,7 +205,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	IF "!TNS_ADMIN!" == "" call :regquery TNS_ADMIN
+	IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
 	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] ^<tns_alias^>
 	ECHO   -k ^<krb5_config^> specify KRB5_CONFIG (default: !KRB5_CONFIG!^)
 	ECHO   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
@@ -203,8 +215,9 @@ EXIT /B 0
 	ECHO   -e               echo the command only
 	ECHO   -i               install a template startup.sql
 	ECHO   -j               use JAAS
-	ECHO Usage: krb_sql -a
+	ECHO Usage: krb_sql -a [-t ^<tns_admin^>] 
 	ECHO   -a               print aliases
+	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
 ENDLOCAL
 EXIT /B 1
 
@@ -230,7 +243,7 @@ EXIT /B
 
 :regquery str
 	REM If TNS_ADMIN not set on command line or in environment get from registry
-	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (call set %~1=%%i%%)
+	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (CALL set %~1=%%i%%)
 EXIT /B 0
 
 :toUpper str

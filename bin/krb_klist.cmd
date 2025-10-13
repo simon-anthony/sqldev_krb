@@ -10,7 +10,7 @@ IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
 
-SET KLISTOPTS=-e -c -f
+SET KLISTOPTS=
 
 IF "%KRB5_CONFIG%" == "" (
 	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
@@ -35,7 +35,7 @@ SET arg=%~2
 
 IF "%option%" == "-c" (
 	SHIFT 
-	REM SET KLISTOPTS=!KLISTOPTS! -e -c -f
+	SET KLISTOPTS=!KLISTOPTS! -e -c -f
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-k" (
 	SHIFT 
@@ -80,7 +80,11 @@ IF "!MMFLAG!" == "" (
 ) ELSE (
 	SET KRB5_BIN=C:\Program Files\MIT\Kerberos\bin
 )
-
+IF "!KFLAG!" == "" (
+	IF "!CFLAG!" == "" (
+		SET KLISTOPTS=!KLISTOPTS! -e -c -f
+	)
+)
 IF NOT "!EFLAG!" == "" (
 	ECHO klist !KLISTOPTS! !NAME!
 	EXIT /B 0

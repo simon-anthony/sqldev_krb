@@ -1,5 +1,7 @@
 # SQL Developer Kerberos Utiltities
 These tools are for the special cases where it is not possible to use the LSA.
+%APPDATA%\SQL Developer\system24.3.1.347.1826\o.sqldeveloper\product-preferences.xml
+%APPDATA%\sqldeveloper\24.3.1>vim product.conf
 
 ## Program Synopses
 
@@ -17,7 +19,7 @@ Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>
 
 ### krb\_kinit 
 ```
-Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]]
+Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
   -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
   -C               unset any default value KRB5CCNAME
   -k               use default keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
@@ -49,7 +51,7 @@ Usage: krb_kdestroy [-c] [-k]
 
 ### krb\_ksql 
 ```
-Usage: krb_sql [-e] [-K|-k <krb5_config>] [-T|-t <tns_admin>] <tns_alias>
+Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] <tns_alias>
   -k <krb5_config> specify KRB5_CONFIG (default: C:\Users\demo\AppData\Roaming\krb5.conf)
   -K               unset any default value KRB5_CONFIG
   -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\network\admin)
@@ -59,8 +61,9 @@ Usage: krb_sql [-e] [-K|-k <krb5_config>] [-T|-t <tns_admin>] <tns_alias>
   -e               echo the command only
   -i               install a template startup.sql
   -j               use JAAS
-Usage: krb_sql -a
+Usage: krb_sql -a -t <tns_admin>
   -a               print aliases
+  -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\network\admin)
 ```
 
 ## Notes on MIT Kerberos

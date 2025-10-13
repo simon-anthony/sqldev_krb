@@ -43,9 +43,18 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
 	SET EFLAG=y
-) ELSE IF "%option%" == "-x" (
+) ELSE IF "%option%" == "-p" (
 	SHIFT
-	SET XFLAG=y
+	SET PFLAG=y
+) ELSE IF "%option%" == "-v" (
+	SHIFT
+	SET VFLAG=y
+) ELSE IF "%option%" == "-r" (
+	SHIFT
+	SET RFLAG=y
+) ELSE IF "%option%" == "-E" (
+	SHIFT
+	SET EEFLAG=y
 ) ELSE (
 	GOTO usage
 )
@@ -63,20 +72,28 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 )
 SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
 
+SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+CALL :getprop VER_FULL !PROPS!
+
+IF NOT "!VFLAG!" == "" (
+	ECHO !VER_FULL!
+	EXIT /B 0
+)
 IF "%CFLAG%" == "" (
 	REM This is the default cache unless overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	REM SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
-	SET KRB5CCNAME=FILE:%%{LOCAL_APPDATA}\krb5cc_%%{username}
-	SET KRB5_KTNAME=FILE:%%{LOCAL_APPDATA}\krb5_%%{username}.keytab
+	IF "!RFLAG!" == "" (
+		SET KRB5CCNAME=FILE:%%{LOCAL_APPDATA}\krb5cc_%%{username}
+		SET KRB5_KTNAME=FILE:%%{LOCAL_APPDATA}\krb5_%%{username}.keytab
+	) ELSE (
+		SET KRB5CCNAME=FILE:!LOCALAPPDATA!\krb5cc_!USERNAME!
+		SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
+	)
 )
 IF NOT "!EFLAG!" == "" (
 	ECHO kconf 
 	EXIT /B 0
-)
-IF NOT "!XFLAG!" == "" (
-	SET KRB5_TRACE=%TEMP%\krb5_trace.log
-	ECHO. > !KRB5_TRACE!
 )
 
 echo Krb5.conf: !KRB5_CONFIG!
@@ -87,23 +104,72 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 	ECHO IncludeConfFile kerberos.conf>> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
 )
 
-SET CONF=!KRB5_CONFIG!
 
-CALL :canon CONF
+REM Create startup script
+
+ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqldeveloper.log 2^>^&1 ^&^& !SQLDEV_HOME!\sqldeveloper.exe >!SQLDEV_HOME!\krb_sqldeveloper.cmd
+REM If we have Git for Windows installed we can create the shortcut
+REM Usage: create-shortcut [options] <source> <destination>
+REM --work-dir ('Start in' field)
+REM --arguments (tacked onto the end of the 'Target')
+REM --show-cmd (I presume this is the 'Run' droplist, values 'Normal window', 'Minimised', 'Maximised')
+REM --icon-file (allows specifying the path to an icon file for the shortcut)
+REM --description ('Comment' field)
+REM 
+IF EXIST "C:\Program Files\Git\mingw64\bin\create-shortcut.exe" (
+	ECHO Creating Desktop shortcut
+	create-shortcut.exe --work-dir "!SQLDEV_HOME!" --icon-file "!SQLDEV_HOME!\sqldeveloper.exe" --description "Kerberos kinit for SQL Developer created by krb_conf" "!SQLDEV_HOME!\krb_sqldeveloper.cmd" "%USERPROFILE%\Desktop\krb_sqldeveloper.lnk"
+)
+
+SET KERBEROS_CACHE=!KRB5CCNAME:FILE:=!
+SET KERBEROS_CONFIG=!KRB5_CONFIG!
+
+IF NOT "!EEFLAG!" == "" (
+	CALL :escape KERBEROS_CACHE
+	CALL :escape KERBEROS_CONFIG
+) ELSE (
+	CALL :canon KERBEROS_CACHE
+	CALL :canon KERBEROS_CONFIG
+)
+
+
 REM Relative path
 ECHO AddVMOption -Dsun.security.krb5.debug=true> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+REM Moot. SQL Developer looks for this anyway:
 ECHO AddVMOption -Djava.security.krb5.conf=../../jdk/jre/conf/security/krb5.conf>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+REM Usually these work - but SQL Developer loads too late in startup to have an effect:
 REM ECHO AddVMOption -Djava.security.krb5.realm=!REALM!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.krb5.kdc=!KDC!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.auth.login.config=%HOMEPATH%/.java.login.config>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+
+IF NOT "!PFLAG!" == "" (
+	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
+		ECHO Install Git for Windows to use this option
+		exit /B 1
+	)
+
+	SET PREFS_FILE=%APPDATA%\SQL Developer\system!VER_FULL!\o.sqldeveloper\product-preferences.xml
+	IF NOT EXIST "!PREFS_FILE!" (
+		ECHO cannot open !PREFS_FILE!
+		EXIT /B 1
+	)
+	ECHO Updating preferences: !PREFS_FILE!
+	ECHO  KERBEROS_CACHE = !KERBEROS_CACHE!
+	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG!
+
+	sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; }' "!PREFS_FILE!"
+)
 
 ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_conf [-h ^<sqldev_home^>]
-	ECHO   -h ^<sqldev_home^>    specify SQL Developer home (default: !SQLDEV_HOME!^)
-	ECHO   -e                 echo the command only
+	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-p] [-r] [-E]
+	ECHO   -h ^<sqldev_home^> specify SQL Developer home (default: !SQLDEV_HOME!^)
+	ECHO   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences 
+	ECHO   -r               resolve krb5.conf parameters
+	ECHO   -v               print SQL Developer version and exit
+	ECHO   -E               escape rather than canonicalisze paths for preferemces files
 ENDLOCAL
 EXIT /B 1
 
@@ -155,6 +221,19 @@ REM canonicalize path URLs for Java
 	FOR %%a IN ("\=/") DO (
 		CALL SET %~1=%%%~1:%%~a%%
 	)
+EXIT /B 0
+
+REM escape windows paths 
+:escape str
+	FOR %%a IN ("\=\\\\") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0
+
+REM retrieve a setting from a .properties file
+:getprop str file
+        FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
+
 EXIT /B 0
 
 :createsqlnetora
