@@ -1,6 +1,6 @@
 @ECHO off
 REM krb_kinit: Create TGT from my keytab
-REM REM vim: fileformat=dos:
+REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 

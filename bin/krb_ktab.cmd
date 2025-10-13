@@ -1,6 +1,6 @@
 @ECHO off
 REM krb_ktab: Create keytab
-REM REM vim: fileformat=dos:
+REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 

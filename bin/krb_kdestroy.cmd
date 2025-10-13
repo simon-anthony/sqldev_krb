@@ -1,6 +1,6 @@
 @ECHO off
 REM krb_kdestroy: Destroy credentials cache or keytab
-REM REM vim: fileformat=dos:
+REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 

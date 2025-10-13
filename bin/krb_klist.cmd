@@ -1,6 +1,6 @@
 @ECHO off
 REM krb_klist: List contents of credentials cache or keytab
-REM REM vim: fileformat=dos:
+REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 

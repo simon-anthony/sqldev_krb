@@ -1,6 +1,6 @@
 @ECHO off
 REM krb_pkinit: Get TGT from certificate
-REM REM vim: fileformat=dos:
+REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 

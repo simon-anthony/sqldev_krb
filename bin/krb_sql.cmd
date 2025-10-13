@@ -1,6 +1,6 @@
 @ECHO off
 REM krb_sql: SQLcl using Kerberos
-REM REM vim: fileformat=dos:
+REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
