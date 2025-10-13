@@ -1,5 +1,6 @@
 @ECHO off
 REM krb_sql: SQLcl using Kerberos
+REM REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
@@ -105,7 +106,6 @@ GOTO parse
 :endparse
 
 IF "%1" == "" GOTO usage
-
 
 REM If TNS_ADMIN not set on command line or in environment get from registry
 IF "!TNS_ADMIN!" == "" call :regquery TNS_ADMIN

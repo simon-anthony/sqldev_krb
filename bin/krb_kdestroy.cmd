@@ -1,5 +1,6 @@
 @ECHO off
 REM krb_kdestroy: Destroy credentials cache or keytab
+REM REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
@@ -59,6 +60,10 @@ GOTO parse
 IF "!FILES!" == "" (
 	SET FILES=!KRB5CCNAME!
 )
+IF EXIST %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% (
+	SET FILES=!FILES! %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% 
+)
+
 IF NOT "!EFLAG!" == "" (
 	ECHO del !FILES! 
 	EXIT /B 0

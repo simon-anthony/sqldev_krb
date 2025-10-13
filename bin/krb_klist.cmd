@@ -1,5 +1,6 @@
 @ECHO off
 REM krb_klist: List contents of credentials cache or keytab
+REM REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
@@ -9,7 +10,7 @@ IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
 
-SET KLISTOPTS=
+SET KLISTOPTS=-e -c -f
 
 IF "%KRB5_CONFIG%" == "" (
 	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
@@ -34,6 +35,7 @@ SET arg=%~2
 
 IF "%option%" == "-c" (
 	SHIFT 
+	REM SET KLISTOPTS=!KLISTOPTS! -e -c -f
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-k" (
 	SHIFT 
@@ -49,6 +51,10 @@ IF "%option%" == "-c" (
 	SHIFT
 	SET KLISTOPTS=!KLISTOPTS! -C
 	SET MMFLAG=y
+) ELSE IF NOT "%option:~0,1%" == "-" (
+	SET arg=%option%
+	REM SHIFT
+	GOTO endparse
 ) ELSE (
 	GOTO usage
 )
@@ -56,18 +62,19 @@ IF "%option%" == "-c" (
 GOTO parse
 :endparse
 
-IF NOT "!KFLAG!" == "" (
-	IF NOT "!CFLAG!" == "" (
-		GOTO usage
-	)
-)
+
+REM Was a name supplied?
+SET NAME=%~1
+
 IF "!MMFLAG!" == "" (
 	IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 		ECHO Invalid SQL Developer home
 		EXIT /B 1
 	)
 	IF NOT "!KFLAG!" == "" (
-		SET NAME=!KRB5_KTNAME!
+		IF "!NAME!" == "" (
+			SET NAME=!KRB5_KTNAME!
+		)
 	)
 	SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
 ) ELSE (
@@ -87,15 +94,23 @@ SET PATH=!KRB5_BIN!;%PATH%
 
 klist !KLISTOPTS! !NAME!
 
+IF "!CFLAG!" == "" (
+	IF "!KFLAG!" == "" (
+		IF EXIST %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% (
+			klist !KLISTOPTS! %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME%
+		)
+	)
+)
 ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_klist [-M] [-c^|-k] [^<name^>]
+	ECHO Usage: krb_klist [-M] [-e] [-c^|-k] [^<name^>]
 	ECHO   -c               specifies credential cache KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -k               specifies keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
 	ECHO   -e               echo the command only
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
 	ECHO   -M               use MIT Kerberos
+	ECHO when no cache or keytab is specified the default action is to search for all credential caches
 ENDLOCAL
 EXIT /B 1
