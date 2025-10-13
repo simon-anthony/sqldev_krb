@@ -1,7 +1,5 @@
 # SQL Developer Kerberos Utiltities
 These tools are for the special cases where it is not possible to use the LSA.
-%APPDATA%\SQL Developer\system24.3.1.347.1826\o.sqldeveloper\product-preferences.xml
-%APPDATA%\sqldeveloper\24.3.1>vim product.conf
 
 ## Program Synopses
 
