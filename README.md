@@ -2,7 +2,7 @@
 
 These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication.
 
-Some enahcned functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option.
+Some enahcned functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option. The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build)[#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11] the MIT Kerberos Windows installable package with PKINIT enabled.
 
 > **_NOTE:_**  These tools specifically discuss using Kerberos within JDBC or JAAS (the *thin client*) and not Kerebros with OCI (or the *thick client*) from the Oracle Client or Instantclient.
 
@@ -10,9 +10,17 @@ The tools offer the possibility of simplified passwordless login to via Kerberos
 
 There are various defaults for cache location and type, configuration file location, sequences for authentication attempts and so on in-built to Windows Kerberos, MIT, Heimdal and the mechanisms within SQL Developer. This package aims to produce consistent behaviour when using an amalgam of these implemntations such that authentication is simplified and consistent.
 
+
+## Installation
+
+Copy the software somewhere, say `C:\Program Files\sqldev_krb`. Put `C:\Program Files\sqldev_krb\bin` in the PATH. 
+
+Set `SQLDEV_HOME` to the root location of the SQL Developer installation to avoid excess typing.
+
+
 ## Overview
 
-In general, there are two mechanisms possible to achieve this when the user has not been automatically authenticated to the realm upon login, for example, via PAM/sshd on UNIX/Linux systems or vi login to a Windows domain.
+In general, there are two mechanisms possible to achieve passwordless login when the user has not been automatically authenticated to the realm upon login, for example, via PAM/sshd on UNIX/Linux systems or vi login to a Windows domain.
 
 ### PKINIT
 
@@ -66,7 +74,6 @@ The default (commented) is set as:
 ##### krb5.conf
 
 Although no default `krb5.conf` is distributed, this is the default location where SQL Developer will search should you choose to create one here.
-
 
 ## Creating a Credentials Cache
 
@@ -155,6 +162,22 @@ Default principal: demo@EXAMPLE.COM, 1 entry found.
      EType (skey, tkt):  AES256 CTS mode with HMAC SHA1-96, AES256 CTS mode with HMAC SHA1-96
      Flags:              INITIAL;PRE-AUTHENT
 </code></pre>
+
+## Using SQL Developer GUI
+
+To set up the environment for Kerberos for SQL Developer
+
+<pre class=console><code>> <b>krb_conf -p -h C:\Oracle\sqldeveloper</b>
+Template krb5.conf: C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf
+        1 file(s) copied.
+Creating Desktop shortcut: sqldeveloper
+Updating preferences: C:\Users\demo\AppData\Roaming\SQL Developer\system24.3.1.347.1826\o.sqldeveloper\product-preferences.xml
+ KERBEROS_CACHE = C:/Users/demo/AppData/Local/krb5cc_demo
+ KERBEROS_CONFIG = C:/Oracle/sqldeveloper/jdk/jre/conf/security/krb5.conf
+</code></pre>
+
+This will set appropriate configurationn parameters and files and create script whcih will get a new ticket before starting the GUI. If Git for Windows is installed it will also create
+a shortcut on the Desktop to this script and set the SQL Developer preferences.
 
 
 ## Using SQLcl
@@ -251,9 +274,6 @@ sql -kerberos -thin -noupdates -tnsadmin C:\Oracle\network\admin -krb5_config C:
 
 In common with the other programs in this package, type the [help](#krb_sql) option (-?) to see the defaults.
 
-## Using SQL Developer
-
-To set up the environment for Kerberos for SQL Developer
 
 
 ## Program Synopses
@@ -333,7 +353,19 @@ Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>
  default <dir> is C:\Users\demo\Certs
 ```
 
-## Building MIT Kerberos for Windows 11 with PKINIT
+### krb_conf
+```text
+Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-p] [-r] [-E]
+  -h <sqldev_home> specify SQL Developer home (default: C:\Oracle\sqldeveloper)
+  -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences
+  -r               resolve krb5.conf parameters
+  -v               print SQL Developer version and exit
+  -E               escape rather than canonicalize paths for preferences files
+```
+
+
+## Building MIT Kerberos with PKINIT Enabled for Windows 11 
 
 Create the following folders:
 

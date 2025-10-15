@@ -80,7 +80,10 @@ IF "%CFLAG%" == "" (
 	REM This is the default cache unless overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	REM SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
-	IF "!RFLAG!" == "" (
+	IF NOT "%PFLAG%" == "" (
+		SET KRB5CCNAME=FILE:!LOCALAPPDATA!\krb5cc_!USERNAME!
+		SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
+	) ELSE IF "!RFLAG!" == "" (
 		SET KRB5CCNAME=FILE:%%{LOCAL_APPDATA}\krb5cc_%%{username}
 		SET KRB5_KTNAME=FILE:%%{LOCAL_APPDATA}\krb5_%%{username}.keytab
 	) ELSE (
@@ -137,7 +140,6 @@ IF NOT "!EEFLAG!" == "" (
 	CALL :canon KERBEROS_CONFIG
 )
 
-
 REM Relative path
 ECHO AddVMOption -Dsun.security.krb5.debug=true> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM Moot. SQL Developer looks for this anyway:
@@ -159,8 +161,8 @@ IF NOT "!PFLAG!" == "" (
 		EXIT /B 1
 	)
 	ECHO Updating preferences: !PREFS_FILE!
-	ECHO  KERBEROS_CACHE = !KERBEROS_CACHE!
-	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG!
+	ECHO  KERBEROS_CACHE = !KERBEROS_CACHE! | sed "s;\\\\\{1,\\};\\\;g"
+	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG! | sed "s;\\\\\{1,\\};\\\;g"
 
 	sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; }' "!PREFS_FILE!"
 )
@@ -169,12 +171,13 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-p] [-r] [-E]
+	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-p] [-r] [-E]
 	ECHO   -h ^<sqldev_home^> specify SQL Developer home (default: !SQLDEV_HOME!^)
+	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences 
 	ECHO   -r               resolve krb5.conf parameters
 	ECHO   -v               print SQL Developer version and exit
-	ECHO   -E               escape rather than canonicalize paths for preferemces files
+	ECHO   -E               escape rather than canonicalize paths for preferences files
 ENDLOCAL
 EXIT /B 1
 
