@@ -2,6 +2,8 @@
 
 These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication.
 
+Some enahcned functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option.
+
 > **_NOTE:_**  These tools specifically discuss using Kerberos within JDBC or JAAS (the *thin client*) and not Kerebros with OCI (or the *thick client*) from the Oracle Client or Instantclient.
 
 The tools offer the possibility of simplified passwordless login to via Kerberos to databases and other services.
@@ -249,9 +251,14 @@ sql -kerberos -thin -noupdates -tnsadmin C:\Oracle\network\admin -krb5_config C:
 
 In common with the other programs in this package, type the [help](#krb_sql) option (-?) to see the defaults.
 
+## Using SQL Developer
+
+To set up the environment for Kerberos for SQL Developer
+
+
 ## Program Synopses
 
-### krb\_ktab 
+### krb_ktab 
 ```shell output
 Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
   -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
@@ -263,7 +270,7 @@ Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>
   -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
 ```
 
-### krb\_kinit 
+### krb_kinit 
 ```shell output
 Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
   -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
@@ -276,7 +283,7 @@ Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<pri
   -M               use MIT Kerberos
 ```
 
-### krb\_klist 
+### krb_klist 
 ```shell output
 Usage: krb_klist [-M] [-c|-k] [<name>]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
@@ -286,7 +293,7 @@ Usage: krb_klist [-M] [-c|-k] [<name>]
   -M               use MIT Kerberos
 ```
 
-### krb\_kdestroy 
+### krb_kdestroy 
 ```shell output
 Usage: krb_kdestroy [-c] [-k]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
@@ -295,7 +302,7 @@ Usage: krb_kdestroy [-c] [-k]
   -e               echo the command only
 ```
 
-### krb\_sql 
+### krb_sql 
 ```shell output
 Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-J]] [-x] <tns_alias>
   -k <krb5_config> specify KRB5_CONFIG (default: C:\Users\demo\AppData\Roaming\krb5.conf)
@@ -313,7 +320,7 @@ Usage: krb_sql -a [-t <tns_admin>]
   -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
 ```
 
-### krb\_pkinit
+### krb_pkinit
 ```shell output
 Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>]
   -c <krb5ccname>    specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
@@ -326,6 +333,139 @@ Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>
  default <dir> is C:\Users\demo\Certs
 ```
 
+## Building MIT Kerberos for Windows 11 with PKINIT
+
+Create the following folders:
+
+```Batchfile
+MKDIR %HOMEPATH%\Src
+MKDIR %HOMEPATH%\Build\krb5
+```
+
+### MIT Kerberos 5 Prerequisites
+
+* [Visual Studio 2022 Community ](https://visualstudio.microsoft.com/vs/community/) Include  the following components:
+
+  * Under Workloads, select Desktop development with C++
+  * Under Individual components -> SDKs, libraries, and frameworks,
+    select "C++ MFC for latest v*** build tools (x86 & x64)", select "Windows 11 SDK (10.0.22621.0) & (10.0.26100.4654)" 
+  * Under Individual components -> Compilers, build tools, and
+    runtimes, select "C++ 20** Redistributable MSMs".  This component
+    is not required if you do not wish to build the installer.
+
+* An OpenSSL installation, including the headers, DLLs, and import
+  .LIB files for building PKINIT. It is recommend to build OpenSSL from source code.
+
+* A version of Perl. [Strawberry Perl](https://strawberryperl.com/) is ideal as it will work
+  to build OpenSSL.
+
+* Some common Unix utilities (sed/awk/cp/cat/mv/rm) installed in the command-line path.The same Unix utilities in [Git for Windows](https://git-scm.com/downloads/win) can be used.
+
+* To build an MSI installer, the Windows Installer XML (WiX) toolkit,
+  and to ensure that the HTML Help Compiler (hhc.exe) and the [WiX](https://github.com/wixtoolset/wix3/releases)
+  tools are installed and in your command-line path.  WiX version 3 is required, not later versions.
+
+
+### OpenSSL Prerequisites
+
+* [Strawberry Perl](https://strawberryperl.com/). 
+
+* The Netwide Assembler [NASM](https://www.nasm.us/) The latest version. Again, ensure that this command is in your path.
+
+* A version of Visual Studio 2022 (as for Kerberos above)
+
+
+### Building OpenSSL
+
+As an _Administrator_ 
+
+Either open:
+
+> x64 Native Tools Command Prompt for VS2022
+
+Or, from a normal command shell:
+
+```Batchfile
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+```
+
+#### Get the Source
+
+Either from the latest branch (3.6 at time of writing) or by downloading a prepackaed version tar file).
+
+```Batchfile
+cd %HOMEPATH%\Src
+git clone https://github.com/openssl/openssl.git
+cd openssl
+```
+
+#### Build Script
+```Batchfile
+set PATH="C:\Strawberry\perl\bin";%PATH%
+set PATH="C:\Program Files\NASM";%PATH%
+
+perl Configure no-legacy VC-WIN64A
+nmake
+nmake install
+```
+### Building  MIT Kerberos
+
+From your standard user account:
+
+Either open:
+
+> x64 Native Tools Command Prompt for VS2022
+
+Or, from a normal command shell:
+
+CALL "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+
+#### Get the Source
+
+Download the latest branch (1.23 at time of writing):
+
+```Batchfile
+cd %HOMEPATH%\Src
+git clone https://github.com/krb5/krb5.git
+cd krb5
+```
+#### Build Script
+```Batchscript
+REM  1) set PATH=%PATH%;"%WindowsSdkVerBinPath%"\x86  # To get uicc.exe
+set PATH=%PATH%;"%WindowsSdkVerBinPath%"\x86
+set PATH=%PATH%;"C:\Program Files (x86)\HTML Help Workshop"
+set PATH="C:\Strawberry\perl\bin";%PATH%
+set PATH=%PATH%;"C:\Program Files (x86)\WiX Toolset v3.14\bin"
+
+REM  2) set KRB_INSTALL_DIR=\path\to\dir    # Where bin/include/lib lives
+set KRB_INSTALL_DIR=C:\Users\Simon Anthony\build\krb5
+
+REM  3) set OPENSSL_DIR=\path\to\openssl    # Where OpenSSL lives
+set OPENSSL_DIR=C:\Program Files\OpenSSL
+
+REM  4) set OPENSSL_VERSION=3               # Version of OpenSSL DLLs
+set OPENSSL_VERSION=4
+
+REM  5) cd xxx\src                          # Go to where source lives
+cd src
+
+REM  6) nmake -f Makefile.in prep-windows   # Create Makefile for Windows
+nmake -f Makefile.in prep-windows
+
+REM  7) nmake [NODEBUG=1]                   # Build the sources
+nmake clean
+nmake NODEBUG=1
+
+REM  8) nmake install [NODEBUG=1]           # Copy libraries/executables
+nmake install NODEBUG=1
+
+REM  9) cd windows\installer\wix            # Go to the installer source
+cd windows\installer\wix
+
+REM 10) nmake [NODEBUG=1]                   # Build the installer
+nmake NODEBUG=1
+rename kfw.msi kfw_1_23x64.msi
+```
 ## Notes on MIT Kerberos
 
 The tools follow the conventions used by MIT's Kerberos for Windows.
