@@ -259,7 +259,7 @@ To set up the environment for Kerberos for SQL Developer
 ## Program Synopses
 
 ### krb_ktab 
-```shell output
+```Batchfile
 Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
   -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
   -K               unset any default value KRB5_KTNAME
@@ -271,7 +271,7 @@ Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>
 ```
 
 ### krb_kinit 
-```shell output
+```Batchfile
 Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
   -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
   -C               unset any default value KRB5CCNAME
@@ -284,7 +284,7 @@ Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<pri
 ```
 
 ### krb_klist 
-```shell output
+```Batchfile
 Usage: krb_klist [-M] [-c|-k] [<name>]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
   -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
@@ -294,7 +294,7 @@ Usage: krb_klist [-M] [-c|-k] [<name>]
 ```
 
 ### krb_kdestroy 
-```shell output
+```Batchfile
 Usage: krb_kdestroy [-c] [-k]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
                    this is the default action if neither -c nor -k are specified
@@ -303,7 +303,7 @@ Usage: krb_kdestroy [-c] [-k]
 ```
 
 ### krb_sql 
-```shell output
+```Batchfile
 Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-J]] [-x] <tns_alias>
   -k <krb5_config> specify KRB5_CONFIG (default: C:\Users\demo\AppData\Roaming\krb5.conf)
   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
@@ -321,7 +321,7 @@ Usage: krb_sql -a [-t <tns_admin>]
 ```
 
 ### krb_pkinit
-```shell output
+```Batchfile
 Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>]
   -c <krb5ccname>    specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -C                 unset any default value of KRB5CCNAME
@@ -430,7 +430,8 @@ git clone https://github.com/krb5/krb5.git
 cd krb5
 ```
 #### Build Script
-```Batchscript
+
+```Batchfile
 REM  1) set PATH=%PATH%;"%WindowsSdkVerBinPath%"\x86  # To get uicc.exe
 set PATH=%PATH%;"%WindowsSdkVerBinPath%"\x86
 set PATH=%PATH%;"C:\Program Files (x86)\HTML Help Workshop"
