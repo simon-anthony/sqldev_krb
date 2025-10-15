@@ -377,13 +377,13 @@ mkdir %HOMEPATH%\Build\krb5
 
 ### Building OpenSSL
 
-As an _Administrator_ 
+The installation process requires _Administrator_ privileges. Open either a:
 
-Either open:
+> **x64 Native Tools Command Prompt for VS2022** (*Run as administrator*)
 
-> x64 Native Tools Command Prompt for VS2022
+or, a normal 
 
-Or, from a normal command shell:
+> **Command Prompt** (*Run as administrator*)
 
 ```Batchfile
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
@@ -391,13 +391,14 @@ call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build
 
 #### Get the Source
 
-Either from the latest branch (3.6 at time of writing) or by downloading a prepackaed version tar file).
+Either clone the current branch or by downloading a prepacked tar file for the latest release from [OpenSSL GitHub releases](https://github.com/openssl/openssl/releases).
 
 ```Batchfile
 cd %HOMEPATH%\Src
 git clone https://github.com/openssl/openssl.git
 cd openssl
 ```
+Or download and extract a prepacked tar file for the latest release from [OpenSSL GitHub releases](https://github.com/openssl/openssl/releases).
 
 #### Build Script
 ```Batchfile
@@ -410,13 +411,13 @@ nmake install
 ```
 ### Building  MIT Kerberos
 
-From your standard user account:
+As a standard user, open either a:
 
-Either open:
+> **x64 Native Tools Command Prompt for VS2022**
 
-> x64 Native Tools Command Prompt for VS2022
+or, a normal 
 
-Or, from a normal command shell:
+> **Command Prompt**
 
 ```Batchfile
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
@@ -431,6 +432,8 @@ cd %HOMEPATH%\Src
 git clone https://github.com/krb5/krb5.git
 cd krb5
 ```
+Alternatively, download and extract the tar arcvhive of the latest distribution from [MIT](https://web.mit.edu/kerberos/dist/). Currently this is 1.22.1
+
 #### Build Script
 
 ```Batchfile
