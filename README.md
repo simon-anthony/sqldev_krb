@@ -99,7 +99,7 @@ A prompt will be made for the password (whether specifying **-p** or not) and th
 
 The *default* location for the keytab is `%LOCALAPPDATA%\krb5_%USERNAME%.keytab`.
 
-Having created a keytab we can view its contents, using the **-k** option to **ktab_klist** to display the default keytab:
+Having created a keytab we can view its contents, using the **-k** option to **krb_klist** to display the default keytab:
 
 <pre class=console><code>> <b>krb_klist -k</b>
 
