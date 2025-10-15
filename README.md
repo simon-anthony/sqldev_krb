@@ -259,7 +259,7 @@ To set up the environment for Kerberos for SQL Developer
 ## Program Synopses
 
 ### krb_ktab 
-```Batchfile
+```text
 Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
   -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
   -K               unset any default value KRB5_KTNAME
@@ -271,7 +271,7 @@ Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>
 ```
 
 ### krb_kinit 
-```Batchfile
+```text
 Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
   -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
   -C               unset any default value KRB5CCNAME
@@ -284,7 +284,7 @@ Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<pri
 ```
 
 ### krb_klist 
-```Batchfile
+```text
 Usage: krb_klist [-M] [-c|-k] [<name>]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
   -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
@@ -294,7 +294,7 @@ Usage: krb_klist [-M] [-c|-k] [<name>]
 ```
 
 ### krb_kdestroy 
-```Batchfile
+```text
 Usage: krb_kdestroy [-c] [-k]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
                    this is the default action if neither -c nor -k are specified
@@ -303,7 +303,7 @@ Usage: krb_kdestroy [-c] [-k]
 ```
 
 ### krb_sql 
-```Batchfile
+```text
 Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-J]] [-x] <tns_alias>
   -k <krb5_config> specify KRB5_CONFIG (default: C:\Users\demo\AppData\Roaming\krb5.conf)
   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
@@ -321,7 +321,7 @@ Usage: krb_sql -a [-t <tns_admin>]
 ```
 
 ### krb_pkinit
-```Batchfile
+```text
 Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>]
   -c <krb5ccname>    specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -C                 unset any default value of KRB5CCNAME
@@ -338,8 +338,8 @@ Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>
 Create the following folders:
 
 ```Batchfile
-MKDIR %HOMEPATH%\Src
-MKDIR %HOMEPATH%\Build\krb5
+mkdir %HOMEPATH%\Src
+mkdir %HOMEPATH%\Build\krb5
 ```
 
 ### MIT Kerberos 5 Prerequisites
@@ -432,38 +432,38 @@ cd krb5
 #### Build Script
 
 ```Batchfile
-REM  1) set PATH=%PATH%;"%WindowsSdkVerBinPath%"\x86  # To get uicc.exe
+rem  1) set PATH=%PATH%;"%WindowsSdkVerBinPath%"\x86  # To get uicc.exe
 set PATH=%PATH%;"%WindowsSdkVerBinPath%"\x86
 set PATH=%PATH%;"C:\Program Files (x86)\HTML Help Workshop"
 set PATH="C:\Strawberry\perl\bin";%PATH%
 set PATH=%PATH%;"C:\Program Files (x86)\WiX Toolset v3.14\bin"
 
-REM  2) set KRB_INSTALL_DIR=\path\to\dir    # Where bin/include/lib lives
+rem  2) set KRB_INSTALL_DIR=\path\to\dir    # Where bin/include/lib lives
 set KRB_INSTALL_DIR=C:\Users\Simon Anthony\build\krb5
 
-REM  3) set OPENSSL_DIR=\path\to\openssl    # Where OpenSSL lives
+rem  3) set OPENSSL_DIR=\path\to\openssl    # Where OpenSSL lives
 set OPENSSL_DIR=C:\Program Files\OpenSSL
 
-REM  4) set OPENSSL_VERSION=3               # Version of OpenSSL DLLs
+rem  4) set OPENSSL_VERSION=3               # Version of OpenSSL DLLs
 set OPENSSL_VERSION=4
 
-REM  5) cd xxx\src                          # Go to where source lives
+rem  5) cd xxx\src                          # Go to where source lives
 cd src
 
-REM  6) nmake -f Makefile.in prep-windows   # Create Makefile for Windows
+rem  6) nmake -f Makefile.in prep-windows   # Create Makefile for Windows
 nmake -f Makefile.in prep-windows
 
-REM  7) nmake [NODEBUG=1]                   # Build the sources
+rem  7) nmake [NODEBUG=1]                   # Build the sources
 nmake clean
 nmake NODEBUG=1
 
-REM  8) nmake install [NODEBUG=1]           # Copy libraries/executables
+rem  8) nmake install [NODEBUG=1]           # Copy libraries/executables
 nmake install NODEBUG=1
 
-REM  9) cd windows\installer\wix            # Go to the installer source
+rem  9) cd windows\installer\wix            # Go to the installer source
 cd windows\installer\wix
 
-REM 10) nmake [NODEBUG=1]                   # Build the installer
+rem 10) nmake [NODEBUG=1]                   # Build the installer
 nmake NODEBUG=1
 rename kfw.msi kfw_1_23x64.msi
 ```
