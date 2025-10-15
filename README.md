@@ -366,7 +366,7 @@ mkdir %HOMEPATH%\Build\krb5
   tools are installed and in your command-line path.  WiX version 3 is required, not later versions.
 
 
-### OpenSSL Prerequisites
+### OpenSSL Prerequisites
 
 * [Strawberry Perl](https://strawberryperl.com/). 
 
