@@ -2,7 +2,7 @@
 
 These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication.
 
-Some enahcned functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option. The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build)[#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11] the MIT Kerberos Windows installable package with PKINIT enabled.
+Some ehanced functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option. The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build)[#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11] the MIT Kerberos Windows installable package with PKINIT enabled.
 
 > **_NOTE:_**  These tools specifically discuss using Kerberos within JDBC or JAAS (the *thin client*) and not Kerebros with OCI (or the *thick client*) from the Oracle Client or Instantclient.
 
