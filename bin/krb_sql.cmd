@@ -89,9 +89,9 @@ IF "%option%" == "-k" (
 ) ELSE IF "%option%" == "-j" (
 	SHIFT
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
-	SET JAVA_HOME=!SQLDEV_HOME!\jdk
-	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=Oracle
-	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
+REM 	SET JAVA_HOME=!SQLDEV_HOME!\jdk
+REM 	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=Oracle
+REM 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 	SET JFLAG=y
 ) ELSE IF "%option%" == "-a" (
 	REM this option needs Git for Windows UNIX tools
@@ -103,6 +103,12 @@ IF "%option%" == "-k" (
 	IF NOT "!TFLAG!" == "" (
 		GOTO endparse
 	)
+) ELSE IF "%option%" == "-x" (
+	SHIFT
+	SET XFLAG=y
+) ELSE IF "%option%" == "-J" (
+	SHIFT
+	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -124,8 +130,10 @@ IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
 
 IF NOT "!TNS_ADMIN!" == "" (
 	IF NOT EXIST "!TNS_ADMIN!\tnsnames.ora" (
-		ECHO File !TNS_ADMIN!\tnsnames.ora does not exist 
-		EXIT /B 1
+		IF "!EFLAG!" == "" (
+			ECHO TNS File !TNS_ADMIN!\tnsnames.ora does not exist 
+		       	EXIT /B 1
+		)
 	)
 	SET SQLOPTS=!SQLOPTS! -tnsadmin !TNS_ADMIN!
 )
@@ -152,14 +160,17 @@ IF NOT "!CFLAG!" == "" (
 		GOTO usage
 	)
 )
+IF NOT "!JJFLAG!" == "" (
+	IF "!JFLAG!" == "" (
+		GOTO usage
+	)
+)
 
 IF NOT "!KRB5_CONFIG!" == "" (
 	IF NOT "!JFLAG!" == "" (
-		ECHO KRB5_CONFIG=!KRB5_CONFIG!
 		SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Djava.security.krb5.conf=!KRB5_CONFIG!
-	) ELSE (
-		SET SQLOPTS=!SQLOPTS! -krb5_config !KRB5_CONFIG!
 	)
+	SET SQLOPTS=!SQLOPTS! -krb5_config !KRB5_CONFIG!
 )
 IF NOT "!KRB5CCNAME!" == "" (
 	SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
@@ -168,13 +179,6 @@ IF NOT "!KRB5CCNAME!" == "" (
 SET p=%~1
 SET alias=%p:*@=%
 
-IF NOT "!EFLAG!" == "" (
-	IF NOT "!JFLAG!" == "" (
-		ECHO JAVA_TOOL_OPTIONS: !JAVA_TOOL_OPTIONS!
-	)
-	ECHO sql %SQLOPTS% /@%alias%
-	EXIT /B 0
-)
 IF NOT "!IFLAG!" == "" (
 	REM Later versions of sqlcl support:
 	REM ECHO set sqlprompt "@red| SQL|@> " > !SQLPATH!\login.sql
@@ -196,7 +200,35 @@ IF NOT "!IFLAG!" == "" (
 	ECHO set sqlformat ansiconsole -config=!SQLPATH!\highlight.json >> !SQLPATH!\startup.sql
 	ECHO -- FORMAT RULES !SQLPATH!\formatter-rules.xml >> !SQLPATH!\startup.sql
 )
+IF NOT "!XFLAG!" == "" (
+	SET KRB5_TRACE=%TEMP%\krb5_trace.log
+	SET DEBUG=true
+	ECHO. > !KRB5_TRACE!
+) ELSE (
+	SET DEBUG=false
+)
 
+IF NOT "!JJFLAG!" == "" (
+	IF EXIST !JAAS_CONFIG! DEL !JAAS_CONFIG!
+)
+IF NOT "!JFLAG!" == "" (
+	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
+	SET JAVA_HOME=!SQLDEV_HOME!\jdk
+	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=Oracle
+	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
+)
+IF NOT "!EFLAG!" == "" (
+	IF NOT "!XFLAG!" == "" (
+		ECHO KRB5_CONFIG=!KRB5_CONFIG!
+		ECHO KRB5CCNAME=!KRB5CCNAME!
+		ECHO TNS_ADMIN=!TNS_ADMIN!
+	)
+	IF NOT "!JFLAG!" == "" (
+		ECHO JAVA_TOOL_OPTIONS: !JAVA_TOOL_OPTIONS!
+	)
+	ECHO sql %SQLOPTS% /@%alias%
+	EXIT /B 0
+)
 SET PATH="!SQLPATH!\bin";%PATH%
 
 sql %SQLOPTS% /@%alias%
@@ -206,7 +238,7 @@ EXIT /B 0
 
 :usage
 	IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
-	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] ^<tns_alias^>
+	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] [-i] [-j[-J]] [-x] ^<tns_alias^>
 	ECHO   -k ^<krb5_config^> specify KRB5_CONFIG (default: !KRB5_CONFIG!^)
 	ECHO   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
 	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
@@ -214,7 +246,9 @@ EXIT /B 0
 	ECHO   -C               unset any default value of KRB5CCNAME
 	ECHO   -e               echo the command only
 	ECHO   -i               install a template startup.sql
-	ECHO   -j               use JAAS
+	ECHO   -j               use JAAS 
+	ECHO   -J               overwrite !JAAS_CONFIG!
+	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
 	ECHO Usage: krb_sql -a [-t ^<tns_admin^>] 
 	ECHO   -a               print aliases
 	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
@@ -229,15 +263,16 @@ EXIT /B
 
 :jaasconfig
 	ECHO Oracle { > !JAAS_CONFIG!
-  	ECHO com.sun.security.auth.module.Krb5LoginModule required >> !JAAS_CONFIG!
-  	ECHO refreshKrb5Config=true >> !JAAS_CONFIG!
-  	ECHO doNotPrompt=true >> !JAAS_CONFIG!
-  	ECHO useKeyTab=false >> !JAAS_CONFIG!
-  	ECHO useTicketCache=true >> !JAAS_CONFIG!
-  	REM ECHO ticketCache=%%{LOCAL_APPDATA}\krb5cc_%%{username} >> !JAAS_CONFIG!
-  	ECHO storeKey=false >> !JAAS_CONFIG!
-  	ECHO renewTGT=false >> !JAAS_CONFIG!
-  	ECHO debug=true; >> !JAAS_CONFIG!
+  	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
+  	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
+  	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
+  	ECHO   useKeyTab=false>> !JAAS_CONFIG!
+  	ECHO   useTicketCache=true >> !JAAS_CONFIG!
+  	REM It is less problematic to use KRB5CCNAME or -krb5ccname than specify ticketCache
+  	REM ECHO   ticketCache=!KRB5CCNAME!>> !JAAS_CONFIG!
+  	ECHO   storeKey=false>> !JAAS_CONFIG!
+  	ECHO   renewTGT=false>> !JAAS_CONFIG!
+  	ECHO   debug=!DEBUG!;>> !JAAS_CONFIG!
 	ECHO }; >> !JAAS_CONFIG!
 EXIT /B
 

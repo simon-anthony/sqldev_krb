@@ -11,10 +11,7 @@ REM domain in lower case
 SET DOMAIN=%USERDNSDOMAIN%
 CALL :toLower DOMAIN
 
-SET PRINCIPAL=%USERNAME%@%REALM%
-
-SET X509_PROXY=FILE:!CERTDIR!\%USERNAME%.crt,!KEYDIR!\%USERNAME%.key
-SET X509_ANCHORS=FILE:!CERTDIR!\ca.crt
+SET SHORTCUT=sqldeveloper
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -96,8 +93,16 @@ IF NOT "!EFLAG!" == "" (
 	EXIT /B 0
 )
 
-echo Krb5.conf: !KRB5_CONFIG!
-CALL :createkrb5conf
+SET BIN=%~dp0
+SET ETC=%bin:\bin=%etc
+
+IF EXIST !ETC!\krb5.conf (
+	ECHO Template krb5.conf: !KRB5_CONFIG!
+	COPY /V !ETC!\krb5.conf !KRB5_CONFIG!
+) ELSE (
+	ECHO New krb5.conf: !KRB5_CONFIG!
+	CALL :createkrb5conf
+)
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 	ECHO. >> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
@@ -117,8 +122,8 @@ REM --icon-file (allows specifying the path to an icon file for the shortcut)
 REM --description ('Comment' field)
 REM 
 IF EXIST "C:\Program Files\Git\mingw64\bin\create-shortcut.exe" (
-	ECHO Creating Desktop shortcut
-	create-shortcut.exe --work-dir "!SQLDEV_HOME!" --icon-file "!SQLDEV_HOME!\sqldeveloper.exe" --description "Kerberos kinit for SQL Developer created by krb_conf" "!SQLDEV_HOME!\krb_sqldeveloper.cmd" "%USERPROFILE%\Desktop\krb_sqldeveloper.lnk"
+	ECHO Creating Desktop shortcut: !SHORTCUT!
+	create-shortcut.exe --work-dir "!SQLDEV_HOME!" --icon-file "!SQLDEV_HOME!\sqldeveloper.exe" --description "Kerberos kinit for SQL Developer created by krb_conf" "!SQLDEV_HOME!\krb_sqldeveloper.cmd" "%USERPROFILE%\Desktop\!SHORTCUT!.lnk"
 )
 
 SET KERBEROS_CACHE=!KRB5CCNAME:FILE:=!
@@ -169,7 +174,7 @@ EXIT /B 0
 	ECHO   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences 
 	ECHO   -r               resolve krb5.conf parameters
 	ECHO   -v               print SQL Developer version and exit
-	ECHO   -E               escape rather than canonicalisze paths for preferemces files
+	ECHO   -E               escape rather than canonicalize paths for preferemces files
 ENDLOCAL
 EXIT /B 1
 

@@ -8,8 +8,7 @@ SET REALM=%USERDNSDOMAIN%
 
 SET KINITOPTS=
 
-SET CERTDIR=C:\Users\%USERNAME%\Certs
-SET KEYDIR=C:\Users\%USERNAME%\Certs
+SET CERTDIR=%USERPROFILE%\Certs
 
 IF "%TNS_ADMIN" == "" (
 	SET TNS_ADMIN=%APPDATA%
@@ -26,9 +25,6 @@ IF "%KRB5CCNAME%" == "" (
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
 )
-
-SET X509_PROXY=FILE:!CERTDIR!\%USERNAME%.crt,!KEYDIR!\%USERNAME%.key
-SET X509_ANCHORS=FILE:!CERTDIR!\ca.crt
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -55,6 +51,33 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-x" (
 	SHIFT
 	SET XFLAG=y
+) ELSE IF "%option%" == "-d" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET CERTDIR=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
+	SET DFLAG=y
+) ELSE IF "%option%" == "-D" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET KEYDIR=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
+	SET DDFLAG=y
+) ELSE IF "%option%" == "-A" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET ANCHDIR=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
+	SET AAFLAG=y
 ) ELSE (
 	GOTO usage
 )
@@ -71,6 +94,15 @@ IF NOT "!CFLAG!" == "" (
 IF NOT "!KRB5CCNAME!" == "" (
 	SET KINITOPTS=!KINITOPTS! -c !KRB5CCNAME!
 )
+IF "!KEYDIR!" == "" (
+	SET KEYDIR=!CERTDIR!
+)	
+IF "!ANCHDIR!" == "" (
+	SET ANCHDIR=!CERTDIR!
+)
+
+SET X509_PROXY=FILE:!CERTDIR!\%USERNAME%.crt,!KEYDIR!\%USERNAME%.key
+SET X509_ANCHORS=FILE:!ANCHDIR!\ca.crt
 
 IF NOT "!EFLAG!" == "" (
 	ECHO kinit -V %KINITOPTS% -X X590_user_identity=!X509_PROXY! -X X509_anchors=!X509_ANCHORS! %USERNAME%@!REALM!
@@ -91,10 +123,14 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_pkinit [-e] [-x] [-C^|-c ^<krb5ccname^>]
+	ECHO Usage: krb_pkinit [-e] [-x] [-C^|-c ^<krb5ccname^>] [-d ^<dir^>] [-D ^<dir^>] [-A ^<dir^>]
 	ECHO   -c ^<krb5ccname^>    specify KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -C                 unset any default value of KRB5CCNAME
+	ECHO   -d                 directory ^<dir^> in which to find certificate (%USERNAME%.crt)
+	ECHO   -D                 directory ^<dir^> in which to find key (%USERNAME%.key)
+	ECHO   -A                 directory ^<dir^> in which to find anchor certificate (ca.crt)
 	ECHO   -e                 echo the command only
 	ECHO   -x                 produce trace (in %TEMP%\krb5_trace.log)
+	ECHO  default ^<dir^> is %USERPROFILE%\Certs
 ENDLOCAL
 EXIT /B 1
