@@ -2,7 +2,16 @@
 
 These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication.
 
-Some enhanced functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option. The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build](#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11) the MIT Kerberos Windows installable package with PKINIT enabled.
+Some enhanced functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option. 
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/GitUnix.png" />
+    </kbd>
+</p>
+
+
+The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build](#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11) the MIT Kerberos Windows installable package with PKINIT enabled.
 
 > **_NOTE:_**  These tools specifically discuss using Kerberos within JDBC or JAAS (the *thin client*) and not Kerebros with OCI (or the *thick client*) from the Oracle Client or Instantclient.
 
@@ -413,7 +422,7 @@ The installation process requires _Administrator_ privileges. Open either a:
 
 > **x64 Native Tools Command Prompt for VS2022** (*Run as administrator*)
 
-or, a normal 
+or, a normal: 
 
 > **Command Prompt** (*Run as administrator*)
 
@@ -447,7 +456,7 @@ As a standard user, open either a:
 
 > **x64 Native Tools Command Prompt for VS2022**
 
-or, a normal 
+or, a normal: 
 
 > **Command Prompt**
 
@@ -465,6 +474,8 @@ git clone https://github.com/krb5/krb5.git
 cd krb5
 ```
 Alternatively, download and extract the tar arcvhive of the latest distribution from [MIT](https://web.mit.edu/kerberos/dist/). Currently this is 1.22.1
+
+The version of the Windows package ("kfw") is defined in the file `src/windows/kerberos.ver` found relative to the source root. Currently this is 4.1.
 
 #### Build Script
 
@@ -502,7 +513,7 @@ cd windows\installer\wix
 
 rem 10) nmake [NODEBUG=1]                   # Build the installer
 nmake NODEBUG=1
-rename kfw.msi kfw_1_23x64.msi
+rename kfw.msi kfw_4-1-x64.msi
 ```
 ## Notes on MIT Kerberos
 
