@@ -51,6 +51,10 @@ IF "%option%" == "-c" (
 	SHIFT
 	SET KLISTOPTS=!KLISTOPTS! -C
 	SET MMFLAG=y
+) ELSE IF "%option%" == "-D" (
+	SHIFT
+	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
+	SET DDFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -114,6 +118,7 @@ EXIT /B 0
 	ECHO   -k               specifies keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
 	ECHO   -e               echo the command only
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   -D               turn on krb5.debug
 	ECHO   -M               use MIT Kerberos
 	ECHO when no cache or keytab is specified the default action is to search for all credential caches
 ENDLOCAL

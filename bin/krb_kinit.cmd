@@ -67,6 +67,10 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-x" (
 	SHIFT
 	SET XFLAG=y
+) ELSE IF "%option%" == "-D" (
+	SHIFT
+	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
+	SET DDFLAG=y
 ) ELSE IF "%option%" == "-M" (
 	SHIFT
 	SET KINITOPTS=!KINITOPTS! -C
@@ -152,7 +156,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_kinit [-e] [-x] [-C^|-c ^<krb5ccname^>] [-K^|-k [-t ^<krb5_ktname^>]] [^<principal_name^>]
+	ECHO Usage: krb_kinit [-e] [-D] [-x] [-C^|-c ^<krb5ccname^>] [-K^|-k [-t ^<krb5_ktname^>]] [^<principal_name^>]
 	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -C               unset any default value of KRB5CCNAME
 	ECHO   -k               use default keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
@@ -160,6 +164,7 @@ EXIT /B 0
 	ECHO   -K               unset any default value KRB5_KTNAME
 	ECHO   -e               echo the command only
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   -D               turn on krb5.debug
 	ECHO   -M               use MIT Kerberos
 ENDLOCAL
 EXIT /B 1

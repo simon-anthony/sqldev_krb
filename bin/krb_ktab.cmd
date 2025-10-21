@@ -61,6 +61,10 @@ IF "%option%" == "-k" (
 ) ELSE IF "%option%" == "-v" (
 	SHIFT
 	SET VFLAG=y
+) ELSE IF "%option%" == "-D" (
+	SHIFT
+	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
+	SET DDFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -144,6 +148,7 @@ EXIT /B 0
 	ECHO   -e               echo the command only
 	ECHO   -p               verify password before creating keytab
 	ECHO   -v               verbose messages
+	ECHO   -D               turn on krb5.debug
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
 ENDLOCAL
 EXIT /B 1
