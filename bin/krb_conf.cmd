@@ -37,6 +37,15 @@ IF "%option%" == "-c" (
 		GOTO usage
 	)
 	SET HFLAG=y
+) ELSE IF "%option%" == "-J" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET JAVA_HOME=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
+	SET JJFLAG=y
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
 	SET EFLAG=y
@@ -67,7 +76,15 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	ECHO Invalid SQL Developer home
 	EXIT /B 1
 )
-SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
+IF NOT "%JAVA_HOME%" == "" (
+	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
+		ECHO Invalid JAVA_HOME %JAVA_HOME%
+		EXIT /B 1
+	)
+	SET KRB5_CONFIG=%JAVA_HOME%\conf\security\krb5.conf
+) ELSE (
+	SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
+)
 
 SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
 CALL :getprop VER_FULL !PROPS!
@@ -178,6 +195,7 @@ EXIT /B 0
 	ECHO   -r               resolve krb5.conf parameters
 	ECHO   -v               print SQL Developer version and exit
 	ECHO   -E               escape rather than canonicalize paths for preferences files
+	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use SQL Developer java
 ENDLOCAL
 EXIT /B 1
 

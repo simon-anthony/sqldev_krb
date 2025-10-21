@@ -1,6 +1,7 @@
 @ECHO off
 REM krb_ktab: Create keytab
 REM vim: fileformat=dos:
+REM https://docs.oracle.com/en/java/javase/22/docs/specs/man/ktab.html
 
 SETLOCAL enabledelayedexpansion
 
@@ -46,9 +47,9 @@ IF "%option%" == "-k" (
 	SHIFT
 	SET KRB5_KTNAME=
 	SET KKFLAG=y
-) ELSE IF "%option%" == "-a" (
+) ELSE IF "%option%" == "-A" (
 	SHIFT
-	SET AFLAG=y
+	SET AAFLAG=y
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
 	SET EFLAG=y
@@ -61,6 +62,9 @@ IF "%option%" == "-k" (
 ) ELSE IF "%option%" == "-v" (
 	SHIFT
 	SET VFLAG=y
+) ELSE IF "%option%" == "-V" (
+	SHIFT
+	SET VVFLAG=y
 ) ELSE IF "%option%" == "-D" (
 	SHIFT
 	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
@@ -90,13 +94,17 @@ IF NOT "!_PRIMARY!" == "" (
 	)
 	SET PRINCIPAL=!PRIMARY!@!REALM!
 )
+IF "!PRIMARY!" == "" (
+	FOR /f "delims=@" %%i IN ("%PRINCIPAL%") DO (set PRIMARY=%%i)
+)
+SET SALT=!REALM!!PRIMARY!
 
 IF NOT "!KFLAG!" == "" (
 	IF NOT "!KKFLAG!" == "" (
 		GOTO usage
 	)
 )
-IF NOT "!AFLAG!" == "" (
+IF NOT "!AAFLAG!" == "" (
 	SET KTABOPTS=!KTABOPTS! -append
 )
 
@@ -113,8 +121,26 @@ IF NOT "!XFLAG!" == "" (
 	ECHO. > !KRB5_TRACE!
 )
 
-SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
+IF NOT "%JAVA_HOME%" == "" (
+	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
+		ECHO Invalid JAVA_HOME %JAVA_HOME%
+		EXIT /B 1
+	)
+	SET KRB5_BIN=%JAVA_HOME%\bin
+) ELSE (
+	SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
+)
 SET PATH=!KRB5_BIN!;%PATH%
+
+IF NOT "!VVFLAG!" == "" (
+	IF NOT "!JAVA_HOME!" == "" (
+		CALL :javaversion !JAVA_HOME! VERSION
+	) ELSE (
+		CALL :javaversion !SQLDEV_HOME!\jdk\jre VERSION
+	)
+	ECHO !VERSION!
+	EXIT /B 0
+)
 
 IF NOT "!PFLAG!" == "" (
 	REM verify the password
@@ -135,21 +161,23 @@ IF NOT "!PFLAG!" == "" (
 	)
 )
 
+REM https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-admin/Salts.html#Salts
 ktab !KTABOPTS! -a !PRINCIPAL! !PASSWORD!
 
 ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_ktab [-e] [-x] [-a] [-K^|-k ^<krb5_ktname^>] [-p] [-x] [^<principal_name^>]
+	ECHO Usage: krb_ktab [-e] [-V] [-x] [-A] [-K^|-k ^<krb5_ktname^>] [-p] [-x] [^<principal_name^>]
 	ECHO   -k ^<krb5_ktname^> specify keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
 	ECHO   -K               unset any default value of KRB5_KTNAME
-	ECHO   -a               new keys are appended to keytab
+	ECHO   -A               new keys are appended to keytab
 	ECHO   -e               echo the command only
 	ECHO   -p               verify password before creating keytab
 	ECHO   -v               verbose messages
 	ECHO   -D               turn on krb5.debug
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   -V               print Java version and exit
 ENDLOCAL
 EXIT /B 1
 
@@ -167,4 +195,8 @@ EXIT /B 0
 		"S=s" "T=t" "U=u" "V=v" "W=w" "X=x" "Y=y" "Z=z") DO (
 		CALL SET %~1=%%%~1:%%~a%%
 	)
+EXIT /B 0
+
+:javaversion java_home vers
+	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
 EXIT /B 0

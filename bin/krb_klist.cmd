@@ -55,6 +55,9 @@ IF "%option%" == "-c" (
 	SHIFT
 	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
 	SET DDFLAG=y
+) ELSE IF "%option%" == "-V" (
+	SHIFT
+	SET VVFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -79,8 +82,21 @@ IF "!MMFLAG!" == "" (
 		IF "!NAME!" == "" (
 			SET NAME=!KRB5_KTNAME!
 		)
+	) ELSE (
+		IF "!NAME!" == "" (
+			REM TODO - allow setting to null to try internal default
+			SET NAME=!KRB5CCNAME!
+		)
 	)
-	SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
+	IF NOT "%JAVA_HOME%" == "" (
+		IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
+			ECHO Invalid JAVA_HOME %JAVA_HOME%
+			EXIT /B 1
+		)
+		SET KRB5_BIN=%JAVA_HOME%\bin
+	) ELSE (
+		SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
+	)
 ) ELSE (
 	SET KRB5_BIN=C:\Program Files\MIT\Kerberos\bin
 )
@@ -100,6 +116,16 @@ IF NOT "!XFLAG!" == "" (
 
 SET PATH=!KRB5_BIN!;%PATH%
 
+IF NOT "!VVFLAG!" == "" (
+	IF NOT "!JAVA_HOME!" == "" (
+		CALL :javaversion !JAVA_HOME! VERSION
+	) ELSE (
+		CALL :javaversion !SQLDEV_HOME!\jdk\jre VERSION
+	)
+	ECHO !VERSION!
+	EXIT /B 0
+)
+
 klist !KLISTOPTS! !NAME!
 
 IF "!CFLAG!" == "" (
@@ -113,13 +139,18 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_klist [-M] [-e] [-c^|-k] [^<name^>]
+	ECHO Usage: krb_klist [-M] [-e] [-V] [-c^|-k] [^<name^>]
 	ECHO   -c               specifies credential cache KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -k               specifies keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
 	ECHO   -e               echo the command only
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
 	ECHO   -D               turn on krb5.debug
 	ECHO   -M               use MIT Kerberos
+	ECHO   -V               print Java version and exit
 	ECHO when no cache or keytab is specified the default action is to search for all credential caches
 ENDLOCAL
 EXIT /B 1
+
+:javaversion java_home vers
+	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
+EXIT /B 0

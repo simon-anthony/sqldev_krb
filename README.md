@@ -287,66 +287,68 @@ In common with the other programs in this package, type the [help](#krb_sql) opt
 
 ## Program Synopses
 
-### krb_ktab 
+### krb_conf
 ```text
-Usage: krb_ktab [-e] [-x] [-a] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
-  -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
-  -K               unset any default value KRB5_KTNAME
-  -a               new keys are appended to keytab
-  -e               echo the command only
-  -p               verify password before creating keytab
-  -v               verbose messages
-  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-p] [-r] [-E]
+  -h <sqldev_home> specify SQL Developer home (default: )
+  -c <krb5ccname>  specify KRB5CCNAME (default: )
+  -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences
+  -r               resolve krb5.conf parameters
+  -v               print SQL Developer version and exit
+  -E               escape rather than canonicalize paths for preferences files
+  -J <java_home>   specify JAVA_HOME (default: ) if unset use SQL Developer java
 ```
 
-### krb_kinit 
-```text
-Usage: krb_kinit [-e] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
-  -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
-  -C               unset any default value KRB5CCNAME
-  -k               use default keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
-  -t <krb5_ktname> specify keytab with <krb5_ktname>
-  -K               unset any default value KRB5_KTNAME
-  -e               echo the command only
-  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -M               use MIT Kerberos
-```
-
-### krb_klist 
-```text
-Usage: krb_klist [-M] [-c|-k] [<name>]
-  -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo )
-  -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
-  -e               echo the command only
-  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -M               use MIT Kerberos
-```
-
-### krb_kdestroy 
+### krb_destroy
 ```text
 Usage: krb_kdestroy [-c] [-k]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
                    this is the default action if neither -c nor -k are specified
-  -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo.keytab)
+  -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -e               echo the command only
 ```
 
-### krb_sql 
+### krb_kinit
 ```text
-Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-J]] [-x] <tns_alias>
-  -k <krb5_config> specify KRB5_CONFIG (default: C:\Users\demo\AppData\Roaming\krb5.conf)
-  -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
-  -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
+Usage: krb_kinit [-e] [-D] [-V] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
   -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -C               unset any default value of KRB5CCNAME
+  -k               use default keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
+  -t <krb5_ktname> specify keytab with <krb5_ktname>
+  -K               unset any default value KRB5_KTNAME
   -e               echo the command only
-  -i               install a template startup.sql
-  -j               use JAAS
-  -J               overwrite C:\Users\demo\.java.login.config
   -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-Usage: krb_sql -a [-t <tns_admin>]
-  -a               print aliases
-  -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
+  -D               turn on krb5.debug
+  -M               use MIT Kerberos
+  -V               print Java version and exit
+```
+
+### krb_klist
+```text
+Usage: krb_klist [-M] [-e] [-V] [-c|-k] [<name>]
+  -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
+  -e               echo the command only
+  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -D               turn on krb5.debug
+  -M               use MIT Kerberos
+  -V               print Java version and exit
+when no cache or keytab is specified the default action is to search for all credential caches
+```
+
+### krb_ktab
+```text
+C:\Oracle\sqldev_krb\bin>krb_ktab -?
+Usage: krb_ktab [-e] [-V] [-x] [-A] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
+  -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
+  -K               unset any default value of KRB5_KTNAME
+  -A               new keys are appended to keytab
+  -e               echo the command only
+  -p               verify password before creating keytab
+  -v               verbose messages
+  -D               turn on krb5.debug
+  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -V               print Java version and exit
 ```
 
 ### krb_pkinit
@@ -362,17 +364,23 @@ Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>
  default <dir> is C:\Users\demo\Certs
 ```
 
-### krb_conf
+### krb_sql
 ```text
-Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-p] [-r] [-E]
-  -h <sqldev_home> specify SQL Developer home (default: C:\Oracle\sqldeveloper)
+Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-J]] [-x] <tns_alias>
+  -k <krb5_config> specify KRB5_CONFIG (default: C:\ProgramData\Kerberos\krb5.conf)
+  -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
+  -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
   -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
-  -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences
-  -r               resolve krb5.conf parameters
-  -v               print SQL Developer version and exit
-  -E               escape rather than canonicalize paths for preferences files
+  -C               unset any default value of KRB5CCNAME
+  -e               echo the command only
+  -i               install a template startup.sql
+  -j               use JAAS
+  -J               overwrite C:\Users\demo\.java.login.config
+  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+Usage: krb_sql -a [-t <tns_admin>]
+  -a               print aliases
+  -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
 ```
-
 
 ## Building MIT Kerberos with PKINIT Enabled for Windows 11 
 
