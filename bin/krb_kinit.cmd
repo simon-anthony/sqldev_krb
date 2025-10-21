@@ -109,7 +109,7 @@ IF NOT "!CFLAG!" == "" (
 IF NOT "!TFLAG!" == "" (
 	IF NOT "!KFLAG!" == "" (
 		SET KINITOPTS=!KINITOPTS! -t !KRB5_KTNAME!
-	ELSE (
+	) ELSE (
 		GOTO usage
 	)
 )
