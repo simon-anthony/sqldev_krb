@@ -98,7 +98,6 @@ IF NOT "!_PRIMARY!" == "" (
 		CALL :toUpper _REALM
 		SET REALM=!_REALM!
 	)
-	echo here
 	SET PRINCIPAL=!PRIMARY!@!REALM!
 )
 IF NOT "!CFLAG!" == "" (
@@ -134,8 +133,10 @@ IF NOT "!KRB5CCNAME!" == "" (
 	SET KINITOPTS=!KINITOPTS! -c !KRB5CCNAME!
 )
 IF NOT "!KRB5_KTNAME!" == "" (
-	IF NOT "!KFLAG!" == "" (
-		SET KINITOPTS=!KINITOPTS! -t !KRB5_KTNAME!
+	IF "!TFLAG!" == "" (
+		IF NOT "!KFLAG!" == "" (
+			SET KINITOPTS=!KINITOPTS! -t !KRB5_KTNAME!
+		)
 	)
 )
 
