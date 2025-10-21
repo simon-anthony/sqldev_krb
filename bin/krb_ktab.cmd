@@ -2,6 +2,9 @@
 REM krb_ktab: Create keytab
 REM vim: fileformat=dos:
 REM https://docs.oracle.com/en/java/javase/22/docs/specs/man/ktab.html
+REM https://bugs.openjdk.org/browse/JDK-8279064
+REM https://bugs.openjdk.org/browse/JDK-8279632
+REM https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-admin/Salts.html#Salts
 
 SETLOCAL enabledelayedexpansion
 
@@ -65,6 +68,22 @@ IF "%option%" == "-k" (
 ) ELSE IF "%option%" == "-V" (
 	SHIFT
 	SET VVFLAG=y
+) ELSE IF "%option%" == "-s" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET SALT=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
+	IF NOT "!FFLAG!" == "" GOTO usage
+	SET KTABOPTS=!KTABOPTS! -s !SALT!
+	SET SFLAG=y
+) ELSE IF "%option%" == "-f" (
+	SHIFT
+	IF NOT "!SFLAG!" == "" GOTO usage
+	SET KTABOPTS=!KTABOPTS! -f
+	SET FFLAG=y
 ) ELSE IF "%option%" == "-D" (
 	SHIFT
 	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
@@ -97,7 +116,8 @@ IF NOT "!_PRIMARY!" == "" (
 IF "!PRIMARY!" == "" (
 	FOR /f "delims=@" %%i IN ("%PRINCIPAL%") DO (set PRIMARY=%%i)
 )
-SET SALT=!REALM!!PRIMARY!
+REM Default salt should be:
+REM SET SALT=!REALM!!PRIMARY!
 
 IF NOT "!KFLAG!" == "" (
 	IF NOT "!KKFLAG!" == "" (
@@ -112,10 +132,6 @@ IF NOT "!KRB5_KTNAME!" == "" (
 	SET KTABOPTS=!KTABOPTS! -k !KRB5_KTNAME!
 )
 
-IF NOT "!EFLAG!" == "" (
-	ECHO ktab !KTABOPTS! -a !PRINCIPAL! PASSWORD
-	EXIT /B 0
-)
 IF NOT "!XFLAG!" == "" (
 	SET KRB5_TRACE=%TEMP%\krb5_trace.log
 	ECHO. > !KRB5_TRACE!
@@ -132,13 +148,33 @@ IF NOT "%JAVA_HOME%" == "" (
 )
 SET PATH=!KRB5_BIN!;%PATH%
 
+IF NOT "!JAVA_HOME!" == "" (
+	CALL :javaversion !JAVA_HOME! VERSION
+) ELSE (
+	CALL :javaversion !SQLDEV_HOME!\jdk\jre VERSION
+)
+
 IF NOT "!VVFLAG!" == "" (
-	IF NOT "!JAVA_HOME!" == "" (
-		CALL :javaversion !JAVA_HOME! VERSION
-	) ELSE (
-		CALL :javaversion !SQLDEV_HOME!\jdk\jre VERSION
-	)
 	ECHO !VERSION!
+	EXIT /B 0
+)
+
+IF NOT "!SFLAG!" == "" (
+	CALL :major !VERSION! MAJOR
+	IF NOT !MAJOR! GEQ 19 (
+		ECHO Java release 19 or above required for -s 
+		EXIT /B 1
+	)
+)
+IF NOT "!FFLAG!" == "" (
+	CALL :major !VERSION! MAJOR
+	IF NOT !MAJOR! GEQ 19 (
+		ECHO Java release 19 or above required for -f
+		EXIT /B 1
+	)
+)
+IF NOT "!EFLAG!" == "" (
+	ECHO ktab !KTABOPTS! -a !PRINCIPAL! PASSWORD
 	EXIT /B 0
 )
 
@@ -161,14 +197,13 @@ IF NOT "!PFLAG!" == "" (
 	)
 )
 
-REM https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-admin/Salts.html#Salts
 ktab !KTABOPTS! -a !PRINCIPAL! !PASSWORD!
 
 ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_ktab [-e] [-V] [-x] [-A] [-K^|-k ^<krb5_ktname^>] [-p] [-x] [^<principal_name^>]
+	ECHO Usage: krb_ktab [-e] [-V] [-x] [-A] [-s ^<salt^>^|-f] [-K^|-k ^<krb5_ktname^>] [-p] [-x] [^<principal_name^>]
 	ECHO   -k ^<krb5_ktname^> specify keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
 	ECHO   -K               unset any default value of KRB5_KTNAME
 	ECHO   -A               new keys are appended to keytab
@@ -177,7 +212,10 @@ EXIT /B 0
 	ECHO   -v               verbose messages
 	ECHO   -D               turn on krb5.debug
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   -s ^<salt^>        specify the salt to use
+	ECHO   -f               request salt from KDC
 	ECHO   -V               print Java version and exit
+	ECHO   options -s and -f only supported with Java ^>=19
 ENDLOCAL
 EXIT /B 1
 
@@ -199,4 +237,8 @@ EXIT /B 0
 
 :javaversion java_home vers
 	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
+EXIT /B 0
+
+:major str var
+        FOR /F "tokens=1 delims=." %%i IN ("%1") DO (CALL set %~2=%%~i%%)
 EXIT /B 0

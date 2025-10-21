@@ -338,8 +338,7 @@ when no cache or keytab is specified the default action is to search for all cre
 
 ### krb_ktab
 ```text
-C:\Oracle\sqldev_krb\bin>krb_ktab -?
-Usage: krb_ktab [-e] [-V] [-x] [-A] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
+Usage: krb_ktab [-e] [-V] [-x] [-A] [-s <salt>|-f] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
   -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -K               unset any default value of KRB5_KTNAME
   -A               new keys are appended to keytab
@@ -348,7 +347,10 @@ Usage: krb_ktab [-e] [-V] [-x] [-A] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_
   -v               verbose messages
   -D               turn on krb5.debug
   -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -s <salt>        specify the salt to use
+  -f               request salt from KDC
   -V               print Java version and exit
+  options -s and -f only supported with Java >=19
 ```
 
 ### krb_pkinit
