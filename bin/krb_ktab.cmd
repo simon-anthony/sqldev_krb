@@ -88,6 +88,15 @@ IF "%option%" == "-k" (
 	SHIFT
 	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
 	SET DDFLAG=y
+) ELSE IF "%option%" == "-J" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET JAVA_HOME=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
+	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -135,6 +144,19 @@ IF NOT "!KRB5_KTNAME!" == "" (
 IF NOT "!XFLAG!" == "" (
 	SET KRB5_TRACE=%TEMP%\krb5_trace.log
 	ECHO. > !KRB5_TRACE!
+)
+
+SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+CALL :getprop VER_FULL !PROPS!
+CALL :getprop VER !PROPS!
+SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
+CALL :getconf SetJavaHome !CONF!
+
+IF "!JJFLAG!" == "" (
+	IF NOT "!SetJavaHome!" == "" (
+		REM Overrides all JAVA_HOME settings unless -J specified
+		SET JAVA_HOME=!SetJavaHome!
+	)
 )
 
 IF NOT "%JAVA_HOME%" == "" (
@@ -203,7 +225,21 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_ktab [-e] [-V] [-x] [-A] [-s ^<salt^>^|-f] [-K^|-k ^<krb5_ktname^>] [-p] [-x] [^<principal_name^>]
+	IF NOT "!SQLDEV_HOME!" == "" (
+		SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+		CALL :getprop VER_FULL !PROPS!
+		CALL :getprop VER !PROPS!
+		SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
+		CALL :getconf SetJavaHome !CONF!
+
+		IF "!JJFLAG!" == "" (
+			IF NOT "!SetJavaHome!" == "" (
+				REM Overrides all JAVA_HOME settings unless -J specified
+				SET JAVA_HOME=!SetJavaHome!
+			)
+		)
+	)
+	ECHO Usage: krb_ktab [-e] [-V] [-x] [-A] [-s ^<salt^>^|-f] [-K^|-k ^<krb5_ktname^>] [-J ^<java_home^>] [-p] [-x] [^<principal_name^>]
 	ECHO   -k ^<krb5_ktname^> specify keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
 	ECHO   -K               unset any default value of KRB5_KTNAME
 	ECHO   -A               new keys are appended to keytab
@@ -215,6 +251,8 @@ EXIT /B 0
 	ECHO   -s ^<salt^>        specify the salt to use
 	ECHO   -f               request salt from KDC
 	ECHO   -V               print Java version and exit
+	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
+	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
 	ECHO   options -s and -f only supported with Java ^>=19
 ENDLOCAL
 EXIT /B 1
@@ -235,10 +273,22 @@ EXIT /B 0
 	)
 EXIT /B 0
 
+REM print Java version
 :javaversion java_home vers
 	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
 EXIT /B 0
 
 :major str var
         FOR /F "tokens=1 delims=." %%i IN ("%1") DO (CALL set %~2=%%~i%%)
+EXIT /B 0
+
+REM retrieve a setting from a .properties file
+:getprop str file
+        FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
+
+EXIT /B 0
+
+REM retrieve a setting from a .conf file
+:getconf str file
+	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 EXIT /B 0

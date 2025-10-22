@@ -106,8 +106,17 @@ REM 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 ) ELSE IF "%option%" == "-x" (
 	SHIFT
 	SET XFLAG=y
-) ELSE IF "%option%" == "-J" (
+) ELSE IF "%option%" == "-w" (
 	SHIFT
+	SET WFLAG=y
+) ELSE IF "%option%" == "-J" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET JAVA_HOME=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
 	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
@@ -160,9 +169,28 @@ IF NOT "!CFLAG!" == "" (
 		GOTO usage
 	)
 )
-IF NOT "!JJFLAG!" == "" (
+IF NOT "!WFLAG!" == "" (
 	IF "!JFLAG!" == "" (
 		GOTO usage
+	)
+)
+
+SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+CALL :getprop VER_FULL !PROPS!
+CALL :getprop VER !PROPS!
+SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
+CALL :getconf SetJavaHome !CONF!
+
+IF "!JJFLAG!" == "" (
+	IF NOT "!SetJavaHome!" == "" (
+		REM Overrides all JAVA_HOME settings unless -J specified
+		SET JAVA_HOME=!SetJavaHome!
+	)
+)
+IF NOT "%JAVA_HOME%" == "" (
+	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
+		ECHO Invalid JAVA_HOME %JAVA_HOME%
+		EXIT /B 1
 	)
 )
 
@@ -208,12 +236,12 @@ IF NOT "!XFLAG!" == "" (
 	SET DEBUG=false
 )
 
-IF NOT "!JJFLAG!" == "" (
+IF NOT "!WFLAG!" == "" (
 	IF EXIST !JAAS_CONFIG! DEL !JAAS_CONFIG!
 )
 IF NOT "!JFLAG!" == "" (
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
-	SET JAVA_HOME=!SQLDEV_HOME!\jdk
+	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk
 	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=Oracle
 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 )
@@ -238,7 +266,7 @@ EXIT /B 0
 
 :usage
 	IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
-	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] [-i] [-j[-J]] [-x] ^<tns_alias^>
+	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] [-i] [-j[-w]] [-x] ^<tns_alias^>
 	ECHO   -k ^<krb5_config^> specify KRB5_CONFIG (default: !KRB5_CONFIG!^)
 	ECHO   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
 	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
@@ -247,8 +275,10 @@ EXIT /B 0
 	ECHO   -e               echo the command only
 	ECHO   -i               install a template startup.sql
 	ECHO   -j               use JAAS 
-	ECHO   -J               overwrite !JAAS_CONFIG!
+	ECHO   -w               overwrite !JAAS_CONFIG!
 	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
+	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
 	ECHO Usage: krb_sql -a [-t ^<tns_admin^>] 
 	ECHO   -a               print aliases
 	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
@@ -295,4 +325,15 @@ EXIT /B 0
 		"S=s" "T=t" "U=u" "V=v" "W=w" "X=x" "Y=y" "Z=z") DO (
 		CALL SET %~1=%%%~1:%%~a%%
 	)
+EXIT /B 0
+
+REM retrieve a setting from a .properties file
+:getprop str file
+        FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
+
+EXIT /B 0
+
+REM retrieve a setting from a .conf file
+:getconf str file
+	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 EXIT /B 0

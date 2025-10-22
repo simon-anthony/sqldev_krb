@@ -289,14 +289,15 @@ In common with the other programs in this package, type the [help](#krb_sql) opt
 
 ### krb_conf
 ```text
-Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-p] [-r] [-E]
+Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-J <java_home>] [-p] [-r] [-E]
   -h <sqldev_home> specify SQL Developer home (default: )
   -c <krb5ccname>  specify KRB5CCNAME (default: )
   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences
   -r               resolve krb5.conf parameters
   -v               print SQL Developer version and exit
   -E               escape rather than canonicalize paths for preferences files
-  -J <java_home>   specify JAVA_HOME (default: ) if unset use SQL Developer java
+  -J <java_home>   specify JAVA_HOME (default: ) if unset use
+                   SetJavaHome from product.conf or SQL Developer built-in JDK
 ```
 
 ### krb_destroy
@@ -310,7 +311,7 @@ Usage: krb_kdestroy [-c] [-k]
 
 ### krb_kinit
 ```text
-Usage: krb_kinit [-e] [-D] [-V] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
+Usage: krb_kinit [-e] [-D] [-V] [-M|-J <java_home>] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
   -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -C               unset any default value of KRB5CCNAME
   -k               use default keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
@@ -320,12 +321,14 @@ Usage: krb_kinit [-e] [-D] [-V] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktnam
   -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
   -D               turn on krb5.debug
   -M               use MIT Kerberos
+  -J <java_home>   specify JAVA_HOME (default: ) if unset use
+                   SetJavaHome from product.conf or SQL Developer built-in JDK
   -V               print Java version and exit
 ```
 
 ### krb_klist
 ```text
-Usage: krb_klist [-M] [-e] [-V] [-c|-k] [<name>]
+Usage: krb_klist [-M|-J <java_home>] [-e] [-V] [-c|-k] [<name>]
   -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -e               echo the command only
@@ -333,12 +336,14 @@ Usage: krb_klist [-M] [-e] [-V] [-c|-k] [<name>]
   -D               turn on krb5.debug
   -M               use MIT Kerberos
   -V               print Java version and exit
+  -J <java_home>   specify JAVA_HOME (default: ) if unset use
+                   SetJavaHome from product.conf or SQL Developer built-in JDK
 when no cache or keytab is specified the default action is to search for all credential caches
 ```
 
 ### krb_ktab
 ```text
-Usage: krb_ktab [-e] [-V] [-x] [-A] [-s <salt>|-f] [-K|-k <krb5_ktname>] [-p] [-x] [<principal_name>]
+Usage: krb_ktab [-e] [-V] [-x] [-A] [-s <salt>|-f] [-K|-k <krb5_ktname>] [-J <java_home>] [-p] [-x] [<principal_name>]
   -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -K               unset any default value of KRB5_KTNAME
   -A               new keys are appended to keytab
@@ -350,6 +355,8 @@ Usage: krb_ktab [-e] [-V] [-x] [-A] [-s <salt>|-f] [-K|-k <krb5_ktname>] [-p] [-
   -s <salt>        specify the salt to use
   -f               request salt from KDC
   -V               print Java version and exit
+  -J <java_home>   specify JAVA_HOME (default: ) if unset use
+                   SetJavaHome from product.conf or SQL Developer built-in JDK
   options -s and -f only supported with Java >=19
 ```
 
@@ -368,7 +375,7 @@ Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>
 
 ### krb_sql
 ```text
-Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-J]] [-x] <tns_alias>
+Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-w]] [-x] <tns_alias>
   -k <krb5_config> specify KRB5_CONFIG (default: C:\ProgramData\Kerberos\krb5.conf)
   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
   -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
@@ -377,8 +384,10 @@ Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-J]] [-x] <t
   -e               echo the command only
   -i               install a template startup.sql
   -j               use JAAS
-  -J               overwrite C:\Users\demo\.java.login.config
+  -w               overwrite C:\Users\demo\.java.login.config
   -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -J <java_home>   specify JAVA_HOME (default: ) if unset use
+                   SetJavaHome from product.conf or SQL Developer built-in JDK
 Usage: krb_sql -a [-t <tns_admin>]
   -a               print aliases
   -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)

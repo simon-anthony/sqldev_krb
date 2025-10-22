@@ -76,6 +76,20 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	ECHO Invalid SQL Developer home
 	EXIT /B 1
 )
+
+SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+CALL :getprop VER_FULL !PROPS!
+CALL :getprop VER !PROPS!
+SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
+CALL :getconf SetJavaHome !CONF!
+
+IF "!JJFLAG!" == "" (
+	IF NOT "!SetJavaHome!" == "" (
+		REM Overrides all JAVA_HOME settings unless -J specified
+		SET JAVA_HOME=!SetJavaHome!
+	)
+)
+
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
 		ECHO Invalid JAVA_HOME %JAVA_HOME%
@@ -85,9 +99,6 @@ IF NOT "%JAVA_HOME%" == "" (
 ) ELSE (
 	SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
 )
-
-SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
-CALL :getprop VER_FULL !PROPS!
 
 IF NOT "!VFLAG!" == "" (
 	ECHO !VER_FULL!
@@ -117,10 +128,10 @@ SET BIN=%~dp0
 SET ETC=%bin:\bin=%etc
 
 IF EXIST !ETC!\krb5.conf (
-	ECHO Template krb5.conf: !KRB5_CONFIG!
+	ECHO Template krb5.conf copied to !KRB5_CONFIG!
 	COPY /V !ETC!\krb5.conf !KRB5_CONFIG!
 ) ELSE (
-	ECHO New krb5.conf: !KRB5_CONFIG!
+	ECHO New krb5.conf created at !KRB5_CONFIG!
 	CALL :createkrb5conf
 )
 
@@ -188,14 +199,29 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-p] [-r] [-E]
+	IF EXIST !SQLDEV_HOME!\sqldeveloper.exe (
+		SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+		CALL :getprop VER_FULL !PROPS!
+		CALL :getprop VER !PROPS!
+		SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
+		CALL :getconf SetJavaHome !CONF!
+
+		IF "!JJFLAG!" == "" (
+			IF NOT "!SetJavaHome!" == "" (
+				REM Overrides all JAVA_HOME settings unless -J specified
+				SET JAVA_HOME=!SetJavaHome!
+			)
+		)
+	)
+	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-J ^<java_home^>] [-p] [-r] [-E]
 	ECHO   -h ^<sqldev_home^> specify SQL Developer home (default: !SQLDEV_HOME!^)
 	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences 
 	ECHO   -r               resolve krb5.conf parameters
 	ECHO   -v               print SQL Developer version and exit
 	ECHO   -E               escape rather than canonicalize paths for preferences files
-	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use SQL Developer java
+	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
+	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
 ENDLOCAL
 EXIT /B 1
 
@@ -260,6 +286,11 @@ REM retrieve a setting from a .properties file
 :getprop str file
         FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 
+EXIT /B 0
+
+REM retrieve a setting from a .conf file
+:getconf str file
+	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 EXIT /B 0
 
 :createsqlnetora

@@ -49,6 +49,7 @@ IF "%option%" == "-c" (
 	SET XFLAG=y
 ) ELSE IF "%option%" == "-M" (
 	SHIFT
+	IF NOT "!JJFLAG!" == "" GOTO usage
 	SET KLISTOPTS=!KLISTOPTS! -C
 	SET MMFLAG=y
 ) ELSE IF "%option%" == "-D" (
@@ -58,6 +59,16 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-V" (
 	SHIFT
 	SET VVFLAG=y
+) ELSE IF "%option%" == "-J" (
+	SHIFT 
+	IF NOT "!MMFLAG!" == "" GOTO usage
+	IF NOT "%arg:~0,1%" == "-" (
+		SET JAVA_HOME=%arg%
+		SHIFT
+	) ELSE (
+		GOTO usage
+	)
+	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -114,6 +125,28 @@ IF NOT "!XFLAG!" == "" (
 	ECHO. > !KRB5_TRACE!
 )
 
+SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+CALL :getprop VER_FULL !PROPS!
+CALL :getprop VER !PROPS!
+SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
+CALL :getconf SetJavaHome !CONF!
+
+IF "!JJFLAG!" == "" (
+	IF NOT "!SetJavaHome!" == "" (
+		REM Overrides all JAVA_HOME settings unless -J specified
+		SET JAVA_HOME=!SetJavaHome!
+	)
+)
+
+IF NOT "%JAVA_HOME%" == "" (
+	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
+		ECHO Invalid JAVA_HOME %JAVA_HOME%
+		EXIT /B 1
+	)
+	SET KRB5_BIN=%JAVA_HOME%\bin
+) ELSE (
+	SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
+)
 SET PATH=!KRB5_BIN!;%PATH%
 
 IF NOT "!VVFLAG!" == "" (
@@ -139,7 +172,21 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_klist [-M] [-e] [-V] [-c^|-k] [^<name^>]
+	IF NOT "!SQLDEV_HOME!" == "" (
+		SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+		CALL :getprop VER_FULL !PROPS!
+		CALL :getprop VER !PROPS!
+		SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
+		CALL :getconf SetJavaHome !CONF!
+
+		IF "!JJFLAG!" == "" (
+			IF NOT "!SetJavaHome!" == "" (
+				REM Overrides all JAVA_HOME settings unless -J specified
+				SET JAVA_HOME=!SetJavaHome!
+			)
+		)
+	)
+	ECHO Usage: krb_klist [-M^|-J ^<java_home^>] [-e] [-V] [-c^|-k] [^<name^>]
 	ECHO   -c               specifies credential cache KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -k               specifies keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
 	ECHO   -e               echo the command only
@@ -147,6 +194,8 @@ EXIT /B 0
 	ECHO   -D               turn on krb5.debug
 	ECHO   -M               use MIT Kerberos
 	ECHO   -V               print Java version and exit
+	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
+	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
 	ECHO when no cache or keytab is specified the default action is to search for all credential caches
 ENDLOCAL
 EXIT /B 1
@@ -154,3 +203,15 @@ EXIT /B 1
 :javaversion java_home vers
 	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
 EXIT /B 0
+
+REM retrieve a setting from a .properties file
+:getprop str file
+        FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
+
+EXIT /B 0
+
+REM retrieve a setting from a .conf file
+:getconf str file
+	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
+EXIT /B 0
+
