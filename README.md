@@ -289,8 +289,8 @@ In common with the other programs in this package, type the [help](#krb_sql) opt
 
 ### krb_conf
 ```text
-Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-J <java_home>] [-p] [-r] [-E]
-  -h <sqldev_home> specify SQL Developer home (default: )
+Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-J <java_home>] [-w] [-p] [-r] [-E]
+  -h <sqldev_home> specify SQL Developer home (default: C:\Oracle\sqldeveloper)
   -c <krb5ccname>  specify KRB5CCNAME (default: )
   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences
   -r               resolve krb5.conf parameters
@@ -298,6 +298,7 @@ Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-J <java_home>] [-p] [-r] 
   -E               escape rather than canonicalize paths for preferences files
   -J <java_home>   specify JAVA_HOME (default: ) if unset use
                    SetJavaHome from product.conf or SQL Developer built-in JDK
+  -w               write value of <java_home> to product.conf
 ```
 
 ### krb_destroy

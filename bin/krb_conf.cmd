@@ -58,6 +58,9 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-r" (
 	SHIFT
 	SET RFLAG=y
+) ELSE IF "%option%" == "-w" (
+	SHIFT
+	SET WFLAG=y
 ) ELSE IF "%option%" == "-E" (
 	SHIFT
 	SET EEFLAG=y
@@ -100,6 +103,10 @@ IF NOT "%JAVA_HOME%" == "" (
 	SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
 )
 
+IF NOT "!WFLAG!" == "" (
+	echo DEBUG
+	IF "!JJFLAG!" == "" GOTO usage
+)
 IF NOT "!VFLAG!" == "" (
 	ECHO !VER_FULL!
 	EXIT /B 0
@@ -179,7 +186,7 @@ REM ECHO AddVMOption -Djava.security.auth.login.config=%HOMEPATH%/.java.login.co
 
 IF NOT "!PFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO Install Git for Windows to use this option
+		ECHO Install Git for Windows to use -p option
 		exit /B 1
 	)
 
@@ -193,6 +200,15 @@ IF NOT "!PFLAG!" == "" (
 	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG! | sed "s;\\\\\{1,\\};\\\;g"
 
 	sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; }' "!PREFS_FILE!"
+)
+
+IF NOT "!WFLAG!" == "" (
+	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
+		ECHO Install Git for Windows to use -w option
+		exit /B 1
+	)
+	CALL :escape JAVA_HOME
+	sed --in-place=.bak '/^#* *SetJavaHome / {s@.*@SetJavaHome '!JAVA_HOME!'@; }' "!CONF!"
 )
 
 ENDLOCAL
@@ -213,7 +229,7 @@ EXIT /B 0
 			)
 		)
 	)
-	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-J ^<java_home^>] [-p] [-r] [-E]
+	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-J ^<java_home^>] [-w] [-p] [-r] [-E]
 	ECHO   -h ^<sqldev_home^> specify SQL Developer home (default: !SQLDEV_HOME!^)
 	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences 
@@ -222,6 +238,7 @@ EXIT /B 0
 	ECHO   -E               escape rather than canonicalize paths for preferences files
 	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
 	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
+	ECHO   -w               write value of ^<java_home^> to product.conf
 ENDLOCAL
 EXIT /B 1
 
