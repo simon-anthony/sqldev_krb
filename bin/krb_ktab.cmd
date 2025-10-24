@@ -15,8 +15,20 @@ IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO Invalid SQL Developer home
+	ECHO Invalid SQL Developer home>&2
 	EXIT /B 1
+)
+
+IF "%KRB5_KTNAME%" == "" (
+	SET _KRB5_KTNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5_KTNAME_SOURCE=[96m
+)
+
+IF "%JAVA_HOME%" == "" (
+	SET _JAVA_HOME_SOURCE=[31m
+) ELSE (
+	SET _JAVA_HOME_SOURCE=[96m
 )
 
 SET KTABOPTS=
@@ -31,6 +43,8 @@ IF "%KRB5_KTNAME%" == "" (
 	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
 )
 
+SET ERRFLAG=
+
 :parse
 IF "%1" == "" GOTO endparse
 
@@ -41,9 +55,10 @@ IF "%option%" == "-k" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5_KTNAME=%arg%
+		SET _KRB5_KTNAME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET KFLAG=y
 ) ELSE IF "%option%" == "-K" (
@@ -74,7 +89,7 @@ IF "%option%" == "-k" (
 		SET SALT=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	IF NOT "!FFLAG!" == "" GOTO usage
 	SET KTABOPTS=!KTABOPTS! -s !SALT!
@@ -92,9 +107,10 @@ IF "%option%" == "-k" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
+		SET _JAVA_HOME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
@@ -102,7 +118,8 @@ IF "%option%" == "-k" (
 	REM SHIFT
 	GOTO endparse
 ) ELSE (
-	GOTO usage
+	SET ERRFLAG=Y
+	GOTO endparse
 )
 
 GOTO parse
@@ -161,8 +178,8 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%
-		EXIT /B 1
+		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_BIN=%JAVA_HOME%\bin
 ) ELSE (
@@ -184,14 +201,14 @@ IF NOT "!VVFLAG!" == "" (
 IF NOT "!SFLAG!" == "" (
 	CALL :major !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
-		ECHO Java release 19 or above required for -s 
+		ECHO Java release 19 or above required for -s>&2
 		EXIT /B 1
 	)
 )
 IF NOT "!FFLAG!" == "" (
 	CALL :major !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
-		ECHO Java release 19 or above required for -f
+		ECHO Java release 19 or above required for -f>&2
 		EXIT /B 1
 	)
 )
@@ -199,6 +216,8 @@ IF NOT "!EFLAG!" == "" (
 	ECHO ktab !KTABOPTS! -a !PRINCIPAL! PASSWORD
 	EXIT /B 0
 )
+
+IF NOT "!ERRFLAG!" == "" GOTO usage
 
 IF NOT "!PFLAG!" == "" (
 	REM verify the password
@@ -239,21 +258,24 @@ EXIT /B 0
 			)
 		)
 	)
-	ECHO Usage: krb_ktab [-e] [-V] [-x] [-A] [-s ^<salt^>^|-f] [-K^|-k ^<krb5_ktname^>] [-J ^<java_home^>] [-p] [-x] [^<principal_name^>]
-	ECHO   -k ^<krb5_ktname^> specify keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
-	ECHO   -K               unset any default value of KRB5_KTNAME
-	ECHO   -A               new keys are appended to keytab
-	ECHO   -e               echo the command only
-	ECHO   -p               verify password before creating keytab
-	ECHO   -v               verbose messages
-	ECHO   -D               turn on krb5.debug
-	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
-	ECHO   -s ^<salt^>        specify the salt to use
-	ECHO   -f               request salt from KDC
-	ECHO   -V               print Java version and exit
-	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
-	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
-	ECHO   options -s and -f only supported with Java ^>=19
+	ECHO [91mUsage[0m: [1mkrb_ktab[0m [[93m-e[0m] [[93m-V[0m] [[93m-x[0m] [[93m-A[0m] [[93m-s [33msalt[0m^|[93m-f[0m] [[93m-K[0m^|[0m[93m-k [33mkrb5_ktname[0m] [[93m-J [33mjava_home[0m] [[93m-p[0m] [[93m-x[0m] [[33mprincipal_name[0m]
+	ECHO   [93m-k[0m [33mkrb5_ktname[0m   Specify keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)
+	ECHO   [93m-K[0m               Unset any default value of [96mKRB5_KTNAME[0m
+	ECHO   [93m-A[0m               New keys are appended to keytab
+	ECHO   [93m-e[0m               Echo the command only
+	ECHO   [93m-p[0m               Verify password before creating keytab
+	ECHO   [93m-v[0m               Verbose messages
+	ECHO   [93m-D[0m               Turn on krb5.debug
+	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   [93m-s[0m [33msalt[0m          Specify the salt to use
+	ECHO   [93m-f[0m               Request salt from KDC
+	ECHO   [93m-V[0m               Print Java version and exit
+	IF NOT "!JAVA_HOME!" == "" (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
+	) ELSE (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
+	)
+	ECHO   options [93m-s[0m and [93m-f[0m only supported with Java ^>=19
 ENDLOCAL
 EXIT /B 1
 
