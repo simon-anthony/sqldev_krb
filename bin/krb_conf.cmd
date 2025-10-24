@@ -122,7 +122,7 @@ IF "!JJFLAG!" == "" (
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
 		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
-		EXIT /B 1
+		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_CONFIG=%JAVA_HOME%\conf\security\krb5.conf
 ) ELSE (

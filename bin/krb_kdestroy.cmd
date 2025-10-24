@@ -21,15 +21,25 @@ IF "%KRB5_CONFIG%" == "" (
 	REM %APPDATA%\krb5.conf is a fallback for MIT Kerberos5
 	SET KRB5_CONFIG=%APPDATA%\krb5.conf
 )
+
 IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
+	SET _KRB5CCNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5CCNAME_SOURCE=[96m
 )
 IF "%KRB5_KTNAME%" == "" (
 	REM JDK does not recognise KRB5_KTNAME
 	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
+	SET _KRB5_KTNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5_KTNAME_SOURCE=[96m
 )
+
+
+SET ERRFLAG=
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -51,7 +61,8 @@ IF "%option%" == "-k" (
 	SHIFT
 	SET EFLAG=y
 ) ELSE (
-	GOTO usage
+	SET ERRFLAG=Y
+	GOTO endparse
 )
 
 GOTO parse
@@ -64,6 +75,8 @@ IF EXIST %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% (
 	SET FILES=!FILES! %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% 
 )
 
+IF NOT "!ERRFLAG!" == "" GOTO usage
+
 IF NOT "!EFLAG!" == "" (
 	ECHO del !FILES! 
 	EXIT /B 0
@@ -75,10 +88,10 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_kdestroy [-c] [-k]
-	ECHO   -c               specifies credential cache KRB5CCNAME (default: !KRB5CCNAME!^)
-	ECHO                    this is the default action if neither -c nor -k are specified
-	ECHO   -k               specifies keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
-	ECHO   -e               echo the command only
+	ECHO [91mUsage[0m: [1mkrb_kdestroy [0m[[93m-c[0m] [[93m-k[0m]
+	ECHO   [93m-c[0m               Specifies credential cache [096mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	ECHO                    this is the default action if neither [93m-c[0m nor [93m-k[0m are specified
+	ECHO   [93m-k[0m               Specifies keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)
+	ECHO   [93m-e[0m               Echo the command only
 ENDLOCAL
 EXIT /B 1

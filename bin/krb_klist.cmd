@@ -21,11 +21,25 @@ IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
+	SET _KRB5CCNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5CCNAME_SOURCE=[96m
 )
 IF "%KRB5_KTNAME%" == "" (
 	REM JDK does not recognise KRB5_KTNAME
 	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
+	SET _KRB5_KTNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5_KTNAME_SOURCE=[96m
 )
+
+IF "%JAVA_HOME%" == "" (
+	SET _JAVA_HOME_SOURCE=[31m
+) ELSE (
+	SET _JAVA_HOME_SOURCE=[96m
+)
+
+SET ERRFLAG=
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -49,7 +63,7 @@ IF "%option%" == "-c" (
 	SET XFLAG=y
 ) ELSE IF "%option%" == "-M" (
 	SHIFT
-	IF NOT "!JJFLAG!" == "" GOTO usage
+	IF NOT "!JJFLAG!" == "" SET ERRFLAG=Y
 	SET KLISTOPTS=!KLISTOPTS! -C
 	SET MMFLAG=y
 ) ELSE IF "%option%" == "-D" (
@@ -61,12 +75,13 @@ IF "%option%" == "-c" (
 	SET VVFLAG=y
 ) ELSE IF "%option%" == "-J" (
 	SHIFT 
-	IF NOT "!MMFLAG!" == "" GOTO usage
+	IF NOT "!MMFLAG!" == "" SET ERRFLAG=Y
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
+		SET _JAVA_HOME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
@@ -74,7 +89,8 @@ IF "%option%" == "-c" (
 	REM SHIFT
 	GOTO endparse
 ) ELSE (
-	GOTO usage
+	SET ERRFLAG=Y
+	GOTO endparse
 )
 
 GOTO parse
@@ -86,7 +102,7 @@ SET NAME=%~1
 
 IF "!MMFLAG!" == "" (
 	IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-		ECHO Invalid SQL Developer home
+		ECHO Invalid SQL Developer home>&2
 		EXIT /B 1
 	)
 	IF NOT "!KFLAG!" == "" (
@@ -101,8 +117,8 @@ IF "!MMFLAG!" == "" (
 	)
 	IF NOT "%JAVA_HOME%" == "" (
 		IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-			ECHO Invalid JAVA_HOME %JAVA_HOME%
-			EXIT /B 1
+			ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+			IF "!ERRFLAG!" == "" EXIT /B 1
 		)
 		SET KRB5_BIN=%JAVA_HOME%\bin
 	) ELSE (
@@ -117,7 +133,7 @@ IF "!KFLAG!" == "" (
 	)
 )
 IF NOT "!EFLAG!" == "" (
-	ECHO klist !KLISTOPTS! !NAME!
+	ECHO klist !KLISTOPTS! !NAME!>&2
 	EXIT /B 0
 )
 IF NOT "!XFLAG!" == "" (
@@ -140,8 +156,8 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%
-		EXIT /B 1
+		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_BIN=%JAVA_HOME%\bin
 ) ELSE (
@@ -158,6 +174,8 @@ IF NOT "!VVFLAG!" == "" (
 	ECHO !VERSION!
 	EXIT /B 0
 )
+
+IF NOT "!ERRFLAG!" == "" GOTO usage
 
 klist !KLISTOPTS! !NAME!
 
@@ -186,17 +204,23 @@ EXIT /B 0
 			)
 		)
 	)
-	ECHO Usage: krb_klist [-M^|-J ^<java_home^>] [-e] [-V] [-c^|-k] [^<name^>]
-	ECHO   -c               specifies credential cache KRB5CCNAME (default: !KRB5CCNAME!^)
-	ECHO   -k               specifies keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
-	ECHO   -e               echo the command only
-	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
-	ECHO   -D               turn on krb5.debug
-	ECHO   -M               use MIT Kerberos
-	ECHO   -V               print Java version and exit
-	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
-	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
-	ECHO when no cache or keytab is specified the default action is to search for all credential caches
+
+	ECHO [91mUsage[0m: [1mkrb_klist[0m [[93m-M[0m^|[93m-J [33mjava_home[0m] [[93m-e[0m] [[93m-V[0m] [[93m-c[0m^|[93m[93m-k[0m] [[33mname[0m]>&2
+	ECHO   [93m-c[0m               Specifies credential cache [096mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	ECHO   [93m-k[0m               Specifies keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)>&2
+	ECHO   [93m-e[0m               Echo the command only>&2
+	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)>&2
+	ECHO   [93m-D[0m               Turn on krb5.debug>&2
+	ECHO   [93m-M[0m               Use MIT Kerberos>&2
+	ECHO   [93m-V[0m               Print Java version and exit>&2
+	IF NOT "!JAVA_HOME!" == "" (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
+	) ELSE (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
+	)
+	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
+	ECHO   [33mname[0m             The cache or keytab of which to list the contents>&2
+	ECHO When no cache or keytab is specified the default action is to search for all credential caches>&2
 ENDLOCAL
 EXIT /B 1
 

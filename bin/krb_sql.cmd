@@ -325,7 +325,8 @@ EXIT /B 0
 	) ELSE (
 		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
 	)
-	ECHO                     use SetJavaHome from product.conf or SQL Developer built-in JDK>&2
+	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
+
 	ECHO.>&2
 	ECHO [91mUsage[0m: [1mkrb_sql[0m [93m-a[0m [[93m-t [33mtns_admin[0m]>&2
 	ECHO   [93m-a[0m               Print aliases>&2
