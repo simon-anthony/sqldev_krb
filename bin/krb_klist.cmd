@@ -191,21 +191,6 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	IF NOT "!SQLDEV_HOME!" == "" (
-		SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
-		CALL :getprop VER_FULL !PROPS!
-		CALL :getprop VER !PROPS!
-		SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
-		CALL :getconf SetJavaHome !CONF!
-
-		IF "!JJFLAG!" == "" (
-			IF NOT "!SetJavaHome!" == "" (
-				REM Overrides all JAVA_HOME settings unless -J specified
-				SET JAVA_HOME=!SetJavaHome!
-			)
-		)
-	)
-
 	ECHO [91mUsage[0m: [1mkrb_klist[0m [[93m-M[0m^|[93m-J [33mjava_home[0m] [[93m-e[0m] [[93m-V[0m] [[93m-c[0m^|[93m[93m-k[0m] [[33mname[0m]>&2
 	ECHO   [93m-c[0m               Specifies credential cache [096mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
 	ECHO   [93m-k[0m               Specifies keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)>&2

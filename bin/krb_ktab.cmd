@@ -244,20 +244,6 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	IF NOT "!SQLDEV_HOME!" == "" (
-		SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
-		CALL :getprop VER_FULL !PROPS!
-		CALL :getprop VER !PROPS!
-		SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
-		CALL :getconf SetJavaHome !CONF!
-
-		IF "!JJFLAG!" == "" (
-			IF NOT "!SetJavaHome!" == "" (
-				REM Overrides all JAVA_HOME settings unless -J specified
-				SET JAVA_HOME=!SetJavaHome!
-			)
-		)
-	)
 	ECHO [91mUsage[0m: [1mkrb_ktab[0m [[93m-e[0m] [[93m-V[0m] [[93m-x[0m] [[93m-A[0m] [[93m-s [33msalt[0m^|[93m-f[0m] [[93m-K[0m^|[0m[93m-k [33mkrb5_ktname[0m] [[93m-J [33mjava_home[0m] [[93m-p[0m] [[93m-x[0m] [[33mprincipal_name[0m]
 	ECHO   [93m-k[0m [33mkrb5_ktname[0m   Specify keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)
 	ECHO   [93m-K[0m               Unset any default value of [96mKRB5_KTNAME[0m
