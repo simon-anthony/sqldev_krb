@@ -18,9 +18,11 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 SET SQLOPTS=-kerberos -thin -noupdates
 
 IF "%KRB5_CONFIG%" == "" (
+	REM set after SetJavaHome evaluation
 	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
 	REM %APPDATA%\krb5.conf is a fallback for MIT Kerberos5
-	SET KRB5_CONFIG=%APPDATA%\krb5.conf
+	REM SET KRB5_CONFIG=%APPDATA%\krb5.conf
+	REM SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
 )
 IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
@@ -194,6 +196,18 @@ IF NOT "%JAVA_HOME%" == "" (
 	)
 )
 
+IF "%KRB5_CONFIG%" == "" (
+	REM set after SetJavaHome evaluation
+	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
+	REM %APPDATA%\krb5.conf is a fallback for MIT Kerberos5
+	REM SET KRB5_CONFIG=%APPDATA%\krb5.conf
+	IF NOT "!JAVA_HOME!" == "" (
+		IF EXIST !JAVA_HOME!\conf\security\krb5.conf SET KRB5_CONFIG=!JAVA_HOME!\conf\security\krb5.conf
+	) ELSE (
+		IF EXIST !SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
+	)
+)
+
 IF NOT "!KRB5_CONFIG!" == "" (
 	IF NOT "!JFLAG!" == "" (
 		SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Djava.security.krb5.conf=!KRB5_CONFIG!
@@ -266,7 +280,7 @@ EXIT /B 0
 
 :usage
 	IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
-	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] [-i] [-j[-w]] [-x] ^<tns_alias^>
+	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] [-i] [-j[-w]] [-J ^<java_home^>] [-x] ^<tns_alias^>
 	ECHO   -k ^<krb5_config^> specify KRB5_CONFIG (default: !KRB5_CONFIG!^)
 	ECHO   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
 	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)

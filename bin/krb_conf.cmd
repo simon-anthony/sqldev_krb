@@ -12,6 +12,7 @@ SET DOMAIN=%USERDNSDOMAIN%
 CALL :toLower DOMAIN
 
 SET SHORTCUT=sqldeveloper
+SET ERRFLAG=
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -60,12 +61,19 @@ IF "%option%" == "-c" (
 	SET RFLAG=y
 ) ELSE IF "%option%" == "-w" (
 	SHIFT
+	IF NOT "!UFLG!" == "" SET ERRFLAG=Y
 	SET WFLAG=y
+) ELSE IF "%option%" == "-u" (
+	SHIFT
+	IF NOT "!WFLG!" == "" SET ERRFLAG=Y
+	SET UFLAG=y
 ) ELSE IF "%option%" == "-E" (
 	SHIFT
 	SET EEFLAG=y
 ) ELSE (
-	GOTO usage
+	REM GOTO usage
+	SET ERRFLAG=Y
+	GOTO endparse
 )
 
 GOTO parse
@@ -104,8 +112,10 @@ IF NOT "%JAVA_HOME%" == "" (
 )
 
 IF NOT "!WFLAG!" == "" (
-	echo DEBUG
 	IF "!JJFLAG!" == "" GOTO usage
+)
+IF NOT "!UFLAG!" == "" (
+	IF NOT "!JJFLAG!" == "" GOTO usage
 )
 IF NOT "!VFLAG!" == "" (
 	ECHO !VER_FULL!
@@ -118,7 +128,7 @@ IF "%CFLAG%" == "" (
 	IF NOT "%PFLAG%" == "" (
 		SET KRB5CCNAME=FILE:!LOCALAPPDATA!\krb5cc_!USERNAME!
 		SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
-	) ELSE IF "!RFLAG!" == "" (
+	) ELSE IF NOT "!RFLAG!" == "" (
 		SET KRB5CCNAME=FILE:%%{LOCAL_APPDATA}\krb5cc_%%{username}
 		SET KRB5_KTNAME=FILE:%%{LOCAL_APPDATA}\krb5_%%{username}.keytab
 	) ELSE (
@@ -126,6 +136,8 @@ IF "%CFLAG%" == "" (
 		SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
 	)
 )
+IF NOT "!ERRFLAG!" == "" GOTO usage
+
 IF NOT "!EFLAG!" == "" (
 	ECHO kconf 
 	EXIT /B 0
@@ -208,7 +220,15 @@ IF NOT "!WFLAG!" == "" (
 		exit /B 1
 	)
 	CALL :escape JAVA_HOME
-	sed --in-place=.bak '/^#* *SetJavaHome / {s@.*@SetJavaHome '!JAVA_HOME!'@; }' "!CONF!"
+	sed --in-place=.bak '/^^#* *SetJavaHome / {s@.*@SetJavaHome '!JAVA_HOME!'@; }' "!CONF!"
+)
+IF NOT "!UFLAG!" == "" (
+	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
+		ECHO Install Git for Windows to use -u option
+		exit /B 1
+	)
+	rem sed --in-place=.bak '/^SetJavaHome / {s@^@#@; }' "!CONF!"
+	sed --in-place=.bak '/[^^#]* *SetJavaHome / { s@^^ *@# ^&@; }' "!CONF!"
 )
 
 ENDLOCAL
@@ -229,7 +249,7 @@ EXIT /B 0
 			)
 		)
 	)
-	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-J ^<java_home^>] [-w] [-p] [-r] [-E]
+	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-J ^<java_home^> [-w]]^|-u] [-p] [-r] [-E]
 	ECHO   -h ^<sqldev_home^> specify SQL Developer home (default: !SQLDEV_HOME!^)
 	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
 	ECHO   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences 
@@ -239,6 +259,7 @@ EXIT /B 0
 	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
 	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
 	ECHO   -w               write value of ^<java_home^> to product.conf
+	ECHO   -u               unset ^<java_home^> in product.conf
 ENDLOCAL
 EXIT /B 1
 
