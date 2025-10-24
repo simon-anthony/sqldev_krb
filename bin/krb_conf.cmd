@@ -11,6 +11,22 @@ REM domain in lower case
 SET DOMAIN=%USERDNSDOMAIN%
 CALL :toLower DOMAIN
 
+IF "%KRB5CCNAME%" == "" (
+	SET _KRB5CCNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5CCNAME_SOURCE=[96m
+)
+
+IF NOT "%SQLDEV_HOME%" == "" (
+	SET _SQLDEV_HOME_SOURCE=[96m
+) 
+
+IF "%JAVA_HOME%" == "" (
+	SET _JAVA_HOME_SOURCE=[31m
+) ELSE (
+	SET _JAVA_HOME_SOURCE=[96m
+)
+
 SET SHORTCUT=sqldeveloper
 SET ERRFLAG=
 
@@ -23,7 +39,7 @@ SET arg=%~2
 IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
-		SET KRB5CCNAME=%arg%
+		SET _KRB5CCNAME_SOURCE=[33m
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -33,6 +49,7 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET SQLDEV_HOME=%arg%
+		SET _SQLDEV_HOME_SOURCE=[33m
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -42,6 +59,7 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
+		SET _JAVA_HOME_SOURCE=[33m
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -97,6 +115,7 @@ IF "!JJFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (
 		REM Overrides all JAVA_HOME settings unless -J specified
 		SET JAVA_HOME=!SetJavaHome!
+		SET _JAVA_HOME_SOURCE=[32m
 	)
 )
 
@@ -253,20 +272,20 @@ EXIT /B 0
 		)
 	)
 	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m[0m] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m>&2
-	ECHO   [93m-h[0m [33msqldev_home[0m   Specify SQL Developer home (default: !SQLDEV_HOME!^)>&2
-	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !KRB5CCNAME!^)>&2
-	ECHO   [93m-p[0m               Update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences>&2
+	ECHO   [93m-h[0m [33msqldev_home[0m   Specify SQL Developer home to override [96mSQLDEV_HOME[0m (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME![0m^)>&2
+	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	ECHO   [93m-p[0m               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences>&2
 	ECHO   [93m-r[0m               Resolve krb5.conf parameters>&2
 	ECHO   [93m-v[0m               Print SQL Developer version and exit>&2
 	ECHO   [93m-E[0m               Escape rather than canonicalize paths for preferences files>&2
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !JAVA_HOME!^) if unset>&2
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
 	) ELSE (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !SQLDEV_HOME!\jdk\jre^) if unset>&2
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
 	)
-	ECHO                     use SetJavaHome from product.conf or SQL Developer built-in JDK>&2
-	ECHO   [93m-w[0m               Write value of [33mjava_home[0m to product.conf>&2
-	ECHO   [93m-u[0m               Unset [33mjava_home[0m in product.conf>&2
+	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
+	ECHO   [93m-w[0m               Write value of [33mjava_home[0m to [032mproduct.conf[0m>&2
+	ECHO   [93m-u[0m               Unset [33mjava_home[0m in [32mproduct.conf[0m>&2
 ENDLOCAL
 EXIT /B 1
 
