@@ -11,7 +11,7 @@ IF "%SQLDEV_HOME%" == "" (
 SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO Invalid SQL Developer home
+	ECHO Invalid SQL Developer home>&2
 	EXIT /B 1
 )
 
@@ -46,7 +46,6 @@ IF "%JAAS_CONFIG%" == "" (
 )
 
 IF "%JAVA_HOME%" == "" (
-	ECHO DEBUG 
 	SET _JAVA_HOME_SOURCE=[31m
 ) ELSE (
 	SET _JAVA_HOME_SOURCE=[96m
@@ -60,7 +59,7 @@ set LF=^
 SET ERRFLAG=
 
 :parse
-IF "%1" == "" GOTO usage
+IF "%1" == "" SET ERRFLAG=Y
 
 SET option=%~1
 SET arg=%~2
@@ -73,7 +72,6 @@ IF "%option%" == "-k" (
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=y
-		REM GOTO usage
 	)
 	SET KFLAG=y
 ) ELSE IF "%option%" == "-t" (
@@ -83,7 +81,6 @@ IF "%option%" == "-k" (
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=y
-		REM GOTO usage
 	)
 	SET _TNS_SOURCE=[33m
 	SET TFLAG=y
@@ -102,7 +99,6 @@ IF "%option%" == "-k" (
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=y
-		REM GOTO usage
 	)
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-C" (
@@ -143,7 +139,6 @@ IF "%option%" == "-k" (
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=y
-		REM GOTO usage
 	)
 	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
@@ -153,17 +148,15 @@ IF "%option%" == "-k" (
 ) ELSE (
 	SET ERRFLAG=y
 	GOTO endparse
-	REM GOTO usage
 )
 
 GOTO parse
 :endparse
 
 IF "%1" == "" (
-	IF "!AFLAG!" == "" (
-		GOTO usage
-	)
+	IF "!AFLAG!" == "" SET ERRFLAG=Y
 )
+
 REM If TNS_ADMIN not set on command line or in environment get from registry
 IF "!TNS_ADMIN!" == "" (
 	CALL :regquery TNS_ADMIN
@@ -174,10 +167,9 @@ IF NOT "!TNS_ADMIN!" == "" (
 	IF NOT EXIST "!TNS_ADMIN!\tnsnames.ora" (
 		IF "!EFLAG!" == "" (
 			IF "!ERRFLAG!" == "" (
-				ECHO TNS File !TNS_ADMIN!\tnsnames.ora does not exist 
+				ECHO TNS File !TNS_ADMIN!\tnsnames.ora does not exist>&2
 				EXIT /B 1
 			)
-			REM SET ERRFLAG=Y
 		)
 	)
 	SET SQLOPTS=!SQLOPTS! -tnsadmin !TNS_ADMIN!
@@ -185,11 +177,11 @@ IF NOT "!TNS_ADMIN!" == "" (
 
 IF NOT "!AFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\awk.exe" (
-		ECHO Install Git for Windows to use this option
+		ECHO Install Git for Windows to use this option>&2
 		exit /B 1
 	)
 	IF "!TNS_ADMIN!" == "" (
-		ECHO TNS_ADMIN not set or no default
+		ECHO TNS_ADMIN not set or no default>&2
 		exit /B 1
 	)
 	awk "/^[A-Z0-1]* =/ { print $1 }" %TNS_ADMIN%\tnsnames.ora
@@ -197,19 +189,16 @@ IF NOT "!AFLAG!" == "" (
 )
 IF NOT "!KFLAG!" == "" (
 	IF NOT "!KKFLAG!" == "" (
-		REM GOTO usage
 		SET ERRFLAG=Y
 	)
 )
 IF NOT "!CFLAG!" == "" (
 	IF NOT "!CCFLAG!" == "" (
-		REM GOTO usage
 		SET ERRFLAG=Y
 	)
 )
 IF NOT "!WFLAG!" == "" (
 	IF "!JFLAG!" == "" (
-		REM GOTO usage
 		SET ERRFLAG=Y
 	)
 )
@@ -366,7 +355,7 @@ EXIT /B
 EXIT /B
 
 :regquery str
-	REM If TNS_ADMIN not set on command line or in environment get from registry
+	REM Retrieve value of str from HKLM\SOFTWARE\ORACLE
 	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (CALL set %~1=%%i%%)
 EXIT /B 0
 

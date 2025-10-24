@@ -27,7 +27,6 @@ IF "%option%" == "-c" (
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
-		REM GOTO usage
 	)
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-h" (
@@ -37,7 +36,6 @@ IF "%option%" == "-c" (
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
-		REM GOTO usage
 	)
 	SET HFLAG=y
 ) ELSE IF "%option%" == "-J" (
@@ -47,7 +45,6 @@ IF "%option%" == "-c" (
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
-		REM GOTO usage
 	)
 	SET JJFLAG=y
 ) ELSE IF "%option%" == "-e" (
@@ -74,7 +71,6 @@ IF "%option%" == "-c" (
 	SHIFT
 	SET EEFLAG=y
 ) ELSE (
-	REM GOTO usage
 	SET ERRFLAG=Y
 	GOTO endparse
 )
@@ -115,10 +111,10 @@ IF NOT "%JAVA_HOME%" == "" (
 )
 
 IF NOT "!WFLAG!" == "" (
-	IF "!JJFLAG!" == "" GOTO usage
+	IF "!JJFLAG!" == "" SET ERRFLAG=Y
 )
 IF NOT "!UFLAG!" == "" (
-	IF NOT "!JJFLAG!" == "" GOTO usage
+	IF NOT "!JJFLAG!" == "" SET ERRFLAG=Y
 )
 IF NOT "!VFLAG!" == "" (
 	ECHO !VER_FULL!
