@@ -289,109 +289,112 @@ In common with the other programs in this package, type the [help](#krb_sql) opt
 
 ### krb_conf
 ```text
-Usage: krb_conf [-h <sqldev_home>] [-c <krb5ccname>] [-J <java_home>] [-w] [-p] [-r] [-E]
-  -h <sqldev_home> specify SQL Developer home (default: C:\Oracle\sqldeveloper)
-  -c <krb5ccname>  specify KRB5CCNAME (default: )
-  -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences
-  -r               resolve krb5.conf parameters
-  -v               print SQL Developer version and exit
-  -E               escape rather than canonicalize paths for preferences files
-  -J <java_home>   specify JAVA_HOME (default: ) if unset use
-                   SetJavaHome from product.conf or SQL Developer built-in JDK
-  -w               write value of <java_home> to product.conf
+Usage: krb_conf [-h sqldev_home] [-c krb5ccname] [-J java_home [-w]]|-u] [-p] [-r] [-E]
+  -h sqldev_home   Specify SQL Developer home to override SQLDEV_HOME (default: C:\Oracle\sqldeveloper)
+  -c krb5ccname    Specify KRB5CCNAME (default: FILE:C:\Users\demo\AppData\Local\krb5cc_demo)
+  -p               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences
+  -r               Resolve krb5.conf parameters
+  -v               Print SQL Developer version and exit
+  -E               Escape rather than canonicalize paths for preferences files
+  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+                    use SetJavaHome from product.conf or SQL Developer built-in JDK
+  -w               Write value of java_home to product.conf
+  -u               Unset java_home in product.conf
 ```
 
 ### krb_destroy
 ```text
 Usage: krb_kdestroy [-c] [-k]
-  -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -c               Specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
                    this is the default action if neither -c nor -k are specified
-  -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
-  -e               echo the command only
+  -k               Specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
+  -e               Echo the command only
 ```
 
 ### krb_kinit
 ```text
-Usage: krb_kinit [-e] [-D] [-V] [-M|-J <java_home>] [-x] [-C|-c <krb5ccname>] [-K|-k [-t <krb5_ktname>]] [<principal_name>]
-  -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
-  -C               unset any default value of KRB5CCNAME
-  -k               use default keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
-  -t <krb5_ktname> specify keytab with <krb5_ktname>
-  -K               unset any default value KRB5_KTNAME
-  -e               echo the command only
-  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -D               turn on krb5.debug
-  -M               use MIT Kerberos
-  -J <java_home>   specify JAVA_HOME (default: ) if unset use
-                   SetJavaHome from product.conf or SQL Developer built-in JDK
-  -V               print Java version and exit
+Usage: krb_kinit [-e] [-D] [-V] [-M|-J java_home] [-x] [-C|-c krb5ccname] [-K|-k [-t krb5_ktname]] [principal_name]
+  -c krb5ccname    Specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -C               Unset any default value of KRB5CCNAME
+  -k               Use default keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
+  -t krb5_ktname   Specify keytab with krb5_ktname
+  -K               Unset any default value of KRB5_KTNAME
+  -e               Echo the command only
+  -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -D               Turn on krb5.debug
+  -M               Use MIT Kerberos
+  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+                    use SetJavaHome from product.conf or SQL Developer built-in JDK
+  -V               Print Java version and exit
 ```
 
 ### krb_klist
-```text
-Usage: krb_klist [-M|-J <java_home>] [-e] [-V] [-c|-k] [<name>]
-  -c               specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
-  -k               specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
-  -e               echo the command only
-  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -D               turn on krb5.debug
-  -M               use MIT Kerberos
-  -V               print Java version and exit
-  -J <java_home>   specify JAVA_HOME (default: ) if unset use
-                   SetJavaHome from product.conf or SQL Developer built-in JDK
-when no cache or keytab is specified the default action is to search for all credential caches
+Usage: krb_klist [-M|-J java_home] [-e] [-V] [-c|-k] [name]
+  -c               Specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -k               Specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
+  -e               Echo the command only
+  -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -D               Turn on krb5.debug
+  -M               Use MIT Kerberos
+  -V               Print Java version and exit
+  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+                    use SetJavaHome from product.conf or SQL Developer built-in JDK
+  name             The cache or keytab of which to list the contents
+When no cache or keytab is specified the default action is to search for all credential caches```text
 ```
 
 ### krb_ktab
 ```text
-Usage: krb_ktab [-e] [-V] [-x] [-A] [-s <salt>|-f] [-K|-k <krb5_ktname>] [-J <java_home>] [-p] [-x] [<principal_name>]
-  -k <krb5_ktname> specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
-  -K               unset any default value of KRB5_KTNAME
-  -A               new keys are appended to keytab
-  -e               echo the command only
-  -p               verify password before creating keytab
-  -v               verbose messages
-  -D               turn on krb5.debug
-  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -s <salt>        specify the salt to use
-  -f               request salt from KDC
-  -V               print Java version and exit
-  -J <java_home>   specify JAVA_HOME (default: ) if unset use
-                   SetJavaHome from product.conf or SQL Developer built-in JDK
-  options -s and -f only supported with Java >=19
+Usage: krb_ktab [-e] [-V] [-x] [-A] [-s salt|-f] [-K|-k krb5_ktname] [-J java_home] [-p] [-x] [principal_name]
+  -k krb5_ktname   Specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
+  -K               Unset any default value of KRB5_KTNAME
+  -A               New keys are appended to keytab
+  -e               Echo the command only
+  -p               Verify password before creating keytab
+  -v               Verbose messages
+  -D               Turn on krb5.debug
+  -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -s salt          Specify the salt to use
+  -f               Request salt from KDC
+  -V               Print Java version and exit
+  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+                    use SetJavaHome from product.conf or SQL Developer built-in JDK
+  Options -s and -f only supported with Java >=19
 ```
 
 ### krb_pkinit
 ```text
-Usage: krb_pkinit [-e] [-x] [-C|-c <krb5ccname>] [-d <dir>] [-D <dir>] [-A <dir>]
-  -c <krb5ccname>    specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
-  -C                 unset any default value of KRB5CCNAME
-  -d                 directory <dir> in which to find certificate (demo.crt)
-  -D                 directory <dir> in which to find key (demo.key)
-  -A                 directory <dir> in which to find anchor certificate (ca.crt)
-  -e                 echo the command only
-  -x                 produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
- default <dir> is C:\Users\demo\Certs
+Usage: krb_pkinit [-e] [-x] [-C|-c krb5ccname>] [-d dir] [-D dir] [-A dir]
+  -c krb5ccname    Specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -C               Unset any default value of KRB5CCNAME
+  -d               Directory dir in which to find certificate (demo.crt)
+  -D               Directory dir in which to find key (demo.key)
+  -A               Directory dir in which to find anchor certificate (ca.crt)
+  -e               Echo the command only
+  -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+ Default dir is C:\Users\demo\Certs
 ```
 
 ### krb_sql
 ```text
-Usage: krb_sql [-e] [-K|-k <krb5_config>] [-t <tns_admin>] [-i] [-j[-w]] [-x] <tns_alias>
-  -k <krb5_config> specify KRB5_CONFIG (default: C:\ProgramData\Kerberos\krb5.conf)
-  -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
-  -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
-  -c <krb5ccname>  specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
-  -C               unset any default value of KRB5CCNAME
-  -e               echo the command only
-  -i               install a template startup.sql
-  -j               use JAAS
-  -w               overwrite C:\Users\demo\.java.login.config
-  -x               produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -J <java_home>   specify JAVA_HOME (default: ) if unset use
-                   SetJavaHome from product.conf or SQL Developer built-in JDK
-Usage: krb_sql -a [-t <tns_admin>]
-  -a               print aliases
-  -t <tns_admin>   specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
+Usage: krb_sql [-e] [-K|-k krb5_config] [-t tns_admin] [-i] [-j[-w]] [-J java_home] [-x] tns_alias
+  -k krb5_config   Specify KRB5_CONFIG (default: C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf)
+  -K               Unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
+  -t tns_admin     Specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
+                    if not in environment try registry
+  -c krb5ccname    Specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -C               Unset any default value of KRB5CCNAME
+  -e               Echo the command only
+  -i               Install a template startup.sql
+  -j               Use JAAS - overide the default file with JAAS_CONFIG
+  -w               Overwrite JAAS configuration C:\Users\demo\.java.login.config
+  -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+                    use SetJavaHome from product.conf or SQL Developer built-in JDK
+
+Usage: krb_sql -a [-t tns_admin]
+  -a               Print aliases
+  -t tns_admin     Specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
 ```
 
 ## Building MIT Kerberos with PKINIT Enabled for Windows 11 

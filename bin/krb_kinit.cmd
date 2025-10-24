@@ -243,7 +243,7 @@ EXIT /B 0
 		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
-	ECHO   [93m-V[0m               print Java version and exit
+	ECHO   [93m-V[0m               Print Java version and exit
 ENDLOCAL
 EXIT /B 1
 

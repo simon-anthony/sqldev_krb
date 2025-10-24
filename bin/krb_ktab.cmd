@@ -263,7 +263,7 @@ EXIT /B 0
 	)
 	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
 
-	ECHO   options [93m-s[0m and [93m-f[0m only supported with Java ^>=19
+	ECHO   Options [93m-s[0m and [93m-f[0m only supported with Java ^>=19
 ENDLOCAL
 EXIT /B 1
 
