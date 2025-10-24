@@ -26,7 +26,8 @@ IF "%option%" == "-c" (
 		SET KRB5CCNAME=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
+		REM GOTO usage
 	)
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-h" (
@@ -35,7 +36,8 @@ IF "%option%" == "-c" (
 		SET SQLDEV_HOME=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
+		REM GOTO usage
 	)
 	SET HFLAG=y
 ) ELSE IF "%option%" == "-J" (
@@ -44,7 +46,8 @@ IF "%option%" == "-c" (
 		SET JAVA_HOME=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
+		REM GOTO usage
 	)
 	SET JJFLAG=y
 ) ELSE IF "%option%" == "-e" (
@@ -80,11 +83,11 @@ GOTO parse
 :endparse
 
 IF "%SQLDEV_HOME%" == "" (
-	ECHO SQLDEV_HOME must be set in the environment or set with -h
+	ECHO SQLDEV_HOME must be set in the environment or set with -h>&2
 	EXIT /B 1
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO Invalid SQL Developer home
+	ECHO Invalid SQL Developer home>&2
 	EXIT /B 1
 )
 
@@ -103,7 +106,7 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%
+		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
 		EXIT /B 1
 	)
 	SET KRB5_CONFIG=%JAVA_HOME%\conf\security\krb5.conf
@@ -198,15 +201,18 @@ REM ECHO AddVMOption -Djava.security.auth.login.config=%HOMEPATH%/.java.login.co
 
 IF NOT "!PFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO Install Git for Windows to use -p option
+		ECHO Install Git for Windows to use -p option>&2
 		exit /B 1
 	)
 
 	SET PREFS_FILE=%APPDATA%\SQL Developer\system!VER_FULL!\o.sqldeveloper\product-preferences.xml
 	IF NOT EXIST "!PREFS_FILE!" (
-		ECHO cannot open !PREFS_FILE!
+		ECHO cannot open !PREFS_FILE!>&2
 		EXIT /B 1
 	)
+	REM if not there add:
+	REM       <value n="KERBEROS_CACHE" v="C:/Users/demo/AppData/Local/krb5cc_demo"/>
+	REM       <value n="KERBEROS_CONFIG" v="C:/Oracle/jdk-25.0.1/conf/security/krb5.conf"/>
 	ECHO Updating preferences: !PREFS_FILE!
 	ECHO  KERBEROS_CACHE = !KERBEROS_CACHE! | sed "s;\\\\\{1,\\};\\\;g"
 	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG! | sed "s;\\\\\{1,\\};\\\;g"
@@ -216,18 +222,19 @@ IF NOT "!PFLAG!" == "" (
 
 IF NOT "!WFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO Install Git for Windows to use -w option
+		ECHO Install Git for Windows to use -w option>&2
 		exit /B 1
 	)
 	CALL :escape JAVA_HOME
+	ECHO Setting SetJavaHome in !CONF!
 	sed --in-place=.bak '/^^#* *SetJavaHome / {s@.*@SetJavaHome '!JAVA_HOME!'@; }' "!CONF!"
 )
 IF NOT "!UFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO Install Git for Windows to use -u option
+		ECHO Install Git for Windows to use -u option>&2
 		exit /B 1
 	)
-	rem sed --in-place=.bak '/^SetJavaHome / {s@^@#@; }' "!CONF!"
+	ECHO Unsetting SetJavaHome in !CONF!
 	sed --in-place=.bak '/[^^#]* *SetJavaHome / { s@^^ *@# ^&@; }' "!CONF!"
 )
 
@@ -249,17 +256,21 @@ EXIT /B 0
 			)
 		)
 	)
-	ECHO Usage: krb_conf [-h ^<sqldev_home^>] [-c ^<krb5ccname^>] [-J ^<java_home^> [-w]]^|-u] [-p] [-r] [-E]
-	ECHO   -h ^<sqldev_home^> specify SQL Developer home (default: !SQLDEV_HOME!^)
-	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
-	ECHO   -p               update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences 
-	ECHO   -r               resolve krb5.conf parameters
-	ECHO   -v               print SQL Developer version and exit
-	ECHO   -E               escape rather than canonicalize paths for preferences files
-	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
-	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
-	ECHO   -w               write value of ^<java_home^> to product.conf
-	ECHO   -u               unset ^<java_home^> in product.conf
+	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m[0m] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m>&2
+	ECHO   [93m-h[0m [33msqldev_home[0m   Specify SQL Developer home (default: !SQLDEV_HOME!^)>&2
+	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !KRB5CCNAME!^)>&2
+	ECHO   [93m-p[0m               Update KERBEROS_CACHE and KERBEROS_CONFIG in product.preferences>&2
+	ECHO   [93m-r[0m               Resolve krb5.conf parameters>&2
+	ECHO   [93m-v[0m               Print SQL Developer version and exit>&2
+	ECHO   [93m-E[0m               Escape rather than canonicalize paths for preferences files>&2
+	IF NOT "!JAVA_HOME!" == "" (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !JAVA_HOME!^) if unset>&2
+	) ELSE (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !SQLDEV_HOME!\jdk\jre^) if unset>&2
+	)
+	ECHO                     use SetJavaHome from product.conf or SQL Developer built-in JDK>&2
+	ECHO   [93m-w[0m               Write value of [33mjava_home[0m to product.conf>&2
+	ECHO   [93m-u[0m               Unset [33mjava_home[0m in product.conf>&2
 ENDLOCAL
 EXIT /B 1
 

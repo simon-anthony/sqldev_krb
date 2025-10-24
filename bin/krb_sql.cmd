@@ -15,6 +15,7 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	EXIT /B 1
 )
 
+SET _TNS_SOURCE=[96m
 SET SQLOPTS=-kerberos -thin -noupdates
 
 IF "%KRB5_CONFIG%" == "" (
@@ -23,20 +24,40 @@ IF "%KRB5_CONFIG%" == "" (
 	REM %APPDATA%\krb5.conf is a fallback for MIT Kerberos5
 	REM SET KRB5_CONFIG=%APPDATA%\krb5.conf
 	REM SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
+	SET _KRB5_CONFIG_SOURCE=[31m
+) ELSE (
+	SET _KRB5_CONFIG_SOURCE=[96m
 )
+
 IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
+	SET _KRB5CCNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5CCNAME_SOURCE=[96m
 )
+
 IF "%JAAS_CONFIG%" == "" (
 	REM This is the default file used in <jre_home>\conf\security\java.security
 	SET JAAS_CONFIG=%HOMEDRIVE%%HOMEPATH%\.java.login.config
+	SET _JAAS_CONFIG_SOURCE=[31m
+) ELSE (
+	SET _JAAS_CONFIG_SOURCE=[96m
+)
+
+IF "%JAVA_HOME%" == "" (
+	ECHO DEBUG 
+	SET _JAVA_HOME_SOURCE=[31m
+) ELSE (
+	SET _JAVA_HOME_SOURCE=[96m
 )
 
 REM Define a Linefeed variable - the two lines after are significant
 set LF=^
 
 
+
+SET ERRFLAG=
 
 :parse
 IF "%1" == "" GOTO usage
@@ -48,9 +69,11 @@ IF "%option%" == "-k" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5_CONFIG=%arg%
+		SET _KRB5_CONFIG_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=y
+		REM GOTO usage
 	)
 	SET KFLAG=y
 ) ELSE IF "%option%" == "-t" (
@@ -59,8 +82,10 @@ IF "%option%" == "-k" (
 		SET TNS_ADMIN=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=y
+		REM GOTO usage
 	)
+	SET _TNS_SOURCE=[33m
 	SET TFLAG=y
 	IF NOT "!AFLAG!" == "" (
 		GOTO endparse
@@ -73,9 +98,11 @@ IF "%option%" == "-k" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5CCNAME=%arg%
+		SET _KRB5CCNAME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=y
+		REM GOTO usage
 	)
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-C" (
@@ -91,9 +118,6 @@ IF "%option%" == "-k" (
 ) ELSE IF "%option%" == "-j" (
 	SHIFT
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
-REM 	SET JAVA_HOME=!SQLDEV_HOME!\jdk
-REM 	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=Oracle
-REM 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 	SET JFLAG=y
 ) ELSE IF "%option%" == "-a" (
 	REM this option needs Git for Windows UNIX tools
@@ -115,9 +139,11 @@ REM 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
+		SET _JAVA_HOME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=y
+		REM GOTO usage
 	)
 	SET JJFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
@@ -125,7 +151,9 @@ REM 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 	REM SHIFT
 	GOTO endparse
 ) ELSE (
-	GOTO usage
+	SET ERRFLAG=y
+	GOTO endparse
+	REM GOTO usage
 )
 
 GOTO parse
@@ -137,13 +165,19 @@ IF "%1" == "" (
 	)
 )
 REM If TNS_ADMIN not set on command line or in environment get from registry
-IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
+IF "!TNS_ADMIN!" == "" (
+	CALL :regquery TNS_ADMIN
+	SET _TNS_SOURCE=[36m
+)
 
 IF NOT "!TNS_ADMIN!" == "" (
 	IF NOT EXIST "!TNS_ADMIN!\tnsnames.ora" (
 		IF "!EFLAG!" == "" (
-			ECHO TNS File !TNS_ADMIN!\tnsnames.ora does not exist 
-		       	EXIT /B 1
+			IF "!ERRFLAG!" == "" (
+				ECHO TNS File !TNS_ADMIN!\tnsnames.ora does not exist 
+				EXIT /B 1
+			)
+			REM SET ERRFLAG=Y
 		)
 	)
 	SET SQLOPTS=!SQLOPTS! -tnsadmin !TNS_ADMIN!
@@ -163,17 +197,20 @@ IF NOT "!AFLAG!" == "" (
 )
 IF NOT "!KFLAG!" == "" (
 	IF NOT "!KKFLAG!" == "" (
-		GOTO usage
+		REM GOTO usage
+		SET ERRFLAG=Y
 	)
 )
 IF NOT "!CFLAG!" == "" (
 	IF NOT "!CCFLAG!" == "" (
-		GOTO usage
+		REM GOTO usage
+		SET ERRFLAG=Y
 	)
 )
 IF NOT "!WFLAG!" == "" (
 	IF "!JFLAG!" == "" (
-		GOTO usage
+		REM GOTO usage
+		SET ERRFLAG=Y
 	)
 )
 
@@ -191,8 +228,9 @@ IF "!JJFLAG!" == "" (
 )
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%
-		EXIT /B 1
+		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		REM EXIT /B 1
+		SET ERRFLAG=Y
 	)
 )
 
@@ -217,6 +255,8 @@ IF NOT "!KRB5_CONFIG!" == "" (
 IF NOT "!KRB5CCNAME!" == "" (
 	SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
 )
+
+IF NOT "!ERRFLAG!" == "" GOTO usage
 
 SET p=%~1
 SET alias=%p:*@=%
@@ -279,23 +319,28 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	IF "!TNS_ADMIN!" == "" CALL :regquery TNS_ADMIN
-	ECHO Usage: krb_sql [-e] [-K^|-k ^<krb5_config^>] [-t ^<tns_admin^>] [-i] [-j[-w]] [-J ^<java_home^>] [-x] ^<tns_alias^>
-	ECHO   -k ^<krb5_config^> specify KRB5_CONFIG (default: !KRB5_CONFIG!^)
-	ECHO   -K               unset any default value of KRB5_CONFIG i.e. use DNS SRV lookup
-	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
-	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
-	ECHO   -C               unset any default value of KRB5CCNAME
-	ECHO   -e               echo the command only
-	ECHO   -i               install a template startup.sql
-	ECHO   -j               use JAAS 
-	ECHO   -w               overwrite !JAAS_CONFIG!
-	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
-	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
-	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
-	ECHO Usage: krb_sql -a [-t ^<tns_admin^>] 
-	ECHO   -a               print aliases
-	ECHO   -t ^<tns_admin^>   specify TNS_ADMIN (default: !TNS_ADMIN!^)
+	ECHO [91mUsage[0m: [1mkrb_sql[0m [[93m-e[0m] [[93m-K[0m^|[93m-k[0m [33mkrb5_config[0m] [[93m-t[0m [33mtns_admin[0m] [[93m-i[0m] [[93m-j[0m[[93m-w[0m]] [[93m-J[0m [33mjava_home[0m] [[93m-x[0m] [33mtns_alias[0m>&2
+	ECHO   [93m-k[0m [33mkrb5_config[0m   Specify [96mKRB5_CONFIG[0m (default: !_KRB5_CONFIG_SOURCE!!KRB5_CONFIG![0m^)>&2
+	ECHO   [93m-K[0m               Unset any default value of [96mKRB5_CONFIG[0m i.e. use DNS SRV lookup>&2
+	ECHO   [93m-t[0m [33mtns_admin[0m     Specify [96mTNS_ADMIN[0m (default: !_TNS_SOURCE!!TNS_ADMIN![0m^)>&2
+	ECHO                     if not in [96menvironment[0m try [36mregistry[0m>&2
+	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	ECHO   [93m-C[0m               Unset any default value of [96mKRB5CCNAME[0m>&2
+	ECHO   [93m-e[0m               Echo the command only>&2
+	ECHO   [93m-i[0m               Install a template startup.sql>&2
+	ECHO   [93m-j[0m               Use JAAS - overide the default file with [96mJAAS_CONFIG[0m >&2
+	ECHO   [93m-w[0m               Overwrite JAAS configuration !_JAAS_CONFIG_SOURCE!!JAAS_CONFIG![0m>&2
+	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)>&2
+	IF NOT "!JAVA_HOME!" == "" (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
+	) ELSE (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
+	)
+	ECHO                     use SetJavaHome from product.conf or SQL Developer built-in JDK>&2
+	ECHO.>&2
+	ECHO [91mUsage[0m: [1mkrb_sql[0m [93m-a[0m [[93m-t [33mtns_admin[0m]>&2
+	ECHO   [93m-a[0m               Print aliases>&2
+	ECHO   [93m-t[0m [33mtns_admin[0m     Specify [96mTNS_ADMIN[0m (default: !_TNS_SOURCE!!TNS_ADMIN![0m^)>&2
 ENDLOCAL
 EXIT /B 1
 
