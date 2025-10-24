@@ -24,7 +24,12 @@ IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
+	SET _KRB5CCNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5CCNAME_SOURCE=[96m
 )
+
+SET ERRFLAG=
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -36,9 +41,10 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5CCNAME=%arg%
+		SET _KRB5CCNAME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		ERRFLAG=Y
 	)
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-C" (
@@ -57,7 +63,7 @@ IF "%option%" == "-c" (
 		SET CERTDIR=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET DFLAG=y
 ) ELSE IF "%option%" == "-D" (
@@ -66,7 +72,7 @@ IF "%option%" == "-c" (
 		SET KEYDIR=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET DDFLAG=y
 ) ELSE IF "%option%" == "-A" (
@@ -75,11 +81,12 @@ IF "%option%" == "-c" (
 		SET ANCHDIR=%arg%
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET AAFLAG=y
 ) ELSE (
-	GOTO usage
+	SET ERRFLAG=Y
+	GOTO endparse
 )
 
 GOTO parse
@@ -104,6 +111,8 @@ IF "!ANCHDIR!" == "" (
 SET X509_PROXY=FILE:!CERTDIR!\%USERNAME%.crt,!KEYDIR!\%USERNAME%.key
 SET X509_ANCHORS=FILE:!ANCHDIR!\ca.crt
 
+IF NOT "!ERRFLAG!" == "" GOTO usage
+
 IF NOT "!EFLAG!" == "" (
 	ECHO kinit -V %KINITOPTS% -X X590_user_identity=!X509_PROXY! -X X509_anchors=!X509_ANCHORS! %USERNAME%@!REALM!
 	EXIT /B 0
@@ -123,14 +132,16 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO Usage: krb_pkinit [-e] [-x] [-C^|-c ^<krb5ccname^>] [-d ^<dir^>] [-D ^<dir^>] [-A ^<dir^>]
-	ECHO   -c ^<krb5ccname^>    specify KRB5CCNAME (default: !KRB5CCNAME!^)
-	ECHO   -C                 unset any default value of KRB5CCNAME
-	ECHO   -d                 directory ^<dir^> in which to find certificate (%USERNAME%.crt)
-	ECHO   -D                 directory ^<dir^> in which to find key (%USERNAME%.key)
-	ECHO   -A                 directory ^<dir^> in which to find anchor certificate (ca.crt)
-	ECHO   -e                 echo the command only
-	ECHO   -x                 produce trace (in %TEMP%\krb5_trace.log)
-	ECHO  default ^<dir^> is %USERPROFILE%\Certs
+	ECHO [91mUsage[0m: [1mkrb_pkinit [0m[[93m-e[0m] [[93m-x[0m] [[93m-C[0m^|[93m-c [33mkrb5ccname^>[0m] [[93m-d [33mdir[0m] [[93m-D [33mdir[0m] [[93m-A [33mdir[0m]>&2
+
+	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	ECHO   [93m-C[0m               Unset any default value of [96mKRB5CCNAME[0m>&2
+
+	ECHO   -d               Directory [33mdir[0m in which to find certificate (%USERNAME%.crt)>&2
+	ECHO   -D               Directory [33mdir[0m in which to find key (%USERNAME%.key)>&2
+	ECHO   -A               Directory [33mdir[0m in which to find anchor certificate (ca.crt)>&2
+	ECHO   -e               Echo the command only>&2
+	ECHO   -x               Produce trace (in %TEMP%\krb5_trace.log)>&2
+	ECHO  Default [33mdir[0m is %USERPROFILE%\Certs>&2
 ENDLOCAL
 EXIT /B 1

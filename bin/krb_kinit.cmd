@@ -22,11 +22,25 @@ IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
+	SET _KRB5CCNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5CCNAME_SOURCE=[96m
 )
 IF "%KRB5_KTNAME%" == "" (
 	REM JDK does not recognise KRB5_KTNAME
 	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
+	SET _KRB5_KTNAME_SOURCE=[31m
+) ELSE (
+	SET _KRB5_KTNAME_SOURCE=[96m
 )
+
+IF "%JAVA_HOME%" == "" (
+	SET _JAVA_HOME_SOURCE=[31m
+) ELSE (
+	SET _JAVA_HOME_SOURCE=[96m
+)
+
+SET ERRFLAG= 
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -38,9 +52,10 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5CCNAME=%arg%
+		SET _KRB5CCNAME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET CFLAG=y
 ) ELSE IF "%option%" == "-C" (
@@ -54,6 +69,7 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5_KTNAME=%arg%
+		SET _KRB5_KTNAME_SOURCE=[33m
 		SHIFT
 	)
 	SET TFLAG=y
@@ -73,17 +89,18 @@ IF "%option%" == "-c" (
 	SET DDFLAG=y
 ) ELSE IF "%option%" == "-M" (
 	SHIFT
-	IF NOT "!JJFLAG!" == "" GOTO usage
+	IF NOT "!JJFLAG!" == "" SET ERRFLAG=Y
 	SET KINITOPTS=!KINITOPTS! -C
 	SET MMFLAG=y
 ) ELSE IF "%option%" == "-J" (
 	SHIFT 
-	IF NOT "!MMFLAG!" == "" GOTO usage
+	IF NOT "!MMFLAG!" == "" SET ERRFLAG=Y
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
+		SET _JAVA_HOME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET JJFLAG=y
 ) ELSE IF "%option%" == "-V" (
@@ -94,7 +111,8 @@ IF "%option%" == "-c" (
 	REM SHIFT
 	GOTO endparse
 ) ELSE (
-	GOTO usage
+	SET ERRFLAG=Y
+	GOTO endparse
 )
 
 GOTO parse
@@ -116,26 +134,26 @@ IF NOT "!_PRIMARY!" == "" (
 )
 IF NOT "!CFLAG!" == "" (
 	IF NOT "!CCFLAG!" == "" (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 )
 IF NOT "!TFLAG!" == "" (
 	IF NOT "!KFLAG!" == "" (
 		SET KINITOPTS=!KINITOPTS! -t !KRB5_KTNAME!
 	) ELSE (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 )
 
 IF NOT "!KFLAG!" == "" (
 	IF NOT "!KKFLAG!" == "" (
-		GOTO usage
+		SET ERRFLAG=Y
 	)
 	SET KINITOPTS=!KINITOPTS! -k
 )
 IF "!MMFLAG!" == "" (
 	IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-		ECHO Invalid SQL Developer home
+		ECHO Invalid SQL Developer home>&2
 		EXIT /B 1
 	)
 	SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
@@ -153,6 +171,8 @@ IF NOT "!KRB5_KTNAME!" == "" (
 		)
 	)
 )
+
+IF NOT "!ERRFLAG!" == "" GOTO usage
 
 IF NOT "!EFLAG!" == "" (
 	ECHO kinit !KINITOPTS! !PRINCIPAL!
@@ -188,8 +208,9 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%
-		EXIT /B 1
+		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		IF "!ERRFLAG!" == "" EXIT /B 1
+		SET ERRFLAG=Y
 	)
 	SET KRB5_BIN=%JAVA_HOME%\bin
 ) ELSE (
@@ -217,19 +238,27 @@ EXIT /B 0
 			)
 		)
 	)
-	ECHO Usage: krb_kinit [-e] [-D] [-V] [-M^|-J ^<java_home^>] [-x] [-C^|-c ^<krb5ccname^>] [-K^|-k [-t ^<krb5_ktname^>]] [^<principal_name^>]
-	ECHO   -c ^<krb5ccname^>  specify KRB5CCNAME (default: !KRB5CCNAME!^)
-	ECHO   -C               unset any default value of KRB5CCNAME
-	ECHO   -k               use default keytab KRB5_KTNAME (default: !KRB5_KTNAME!^)
-	ECHO   -t ^<krb5_ktname^> specify keytab with ^<krb5_ktname^>
-	ECHO   -K               unset any default value KRB5_KTNAME
-	ECHO   -e               echo the command only
-	ECHO   -x               produce trace (in %TEMP%\krb5_trace.log)
-	ECHO   -D               turn on krb5.debug
-	ECHO   -M               use MIT Kerberos
-	ECHO   -J ^<java_home^>   specify JAVA_HOME (default: !JAVA_HOME!^) if unset use 
-	ECHO                    SetJavaHome from product.conf or SQL Developer built-in JDK
-	ECHO   -V               print Java version and exit
+
+	ECHO [91mUsage[0m: [1mkrb_kinit [0m[[93m-e[0m] [[93m-D[0m[0m] [[93m-V[0m] [[93m-M[0m^|[93m-J [33mjava_home[0m] [[93m-x[0m] [[93m-C[0m^|[93m-c [33mkrb5ccname[0m] [[93m-K[0m^|[93m-k [0m[[93m-t [33mkrb5_ktname[0m]] [[33mprincipal_name[0m]
+
+	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	ECHO   [93m-C[0m               Unset any default value of [96mKRB5CCNAME[0m>&2
+	ECHO   [93m-k[0m               Use default keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)
+
+	ECHO   [93m-t[0m [33mkrb5_ktname[0m   Specify keytab with [33mkrb5_ktname[0m
+
+	ECHO   [93m-K[0m               Unset any default value of [96mKRB5_KTNAME[0m
+	ECHO   [93m-e[0m               Echo the command only
+	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   [93m-D[0m               Turn on krb5.debug
+	ECHO   [93m-M[0m               Use MIT Kerberos
+	IF NOT "!JAVA_HOME!" == "" (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
+	) ELSE (
+		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
+	)
+	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
+	ECHO   [93m-V[0m               print Java version and exit
 ENDLOCAL
 EXIT /B 1
 

@@ -119,6 +119,7 @@ IF "!MMFLAG!" == "" (
 		IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
 			ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
 			IF "!ERRFLAG!" == "" EXIT /B 1
+			SET ERRFLAG=Y
 		)
 		SET KRB5_BIN=%JAVA_HOME%\bin
 	) ELSE (
