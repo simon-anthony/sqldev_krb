@@ -8,6 +8,8 @@ REM https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-admin/Salts.html#S
 
 SETLOCAL enabledelayedexpansion
 
+SET PROG=krb_ktab
+
 SET REALM=%USERDNSDOMAIN%
 SET PRINCIPAL=%USERNAME%@%REALM%
 
@@ -15,7 +17,7 @@ IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO Invalid SQL Developer home>&2
+	ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
 	EXIT /B 1
 )
 
@@ -178,7 +180,7 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_BIN=%JAVA_HOME%\bin
@@ -201,14 +203,14 @@ IF NOT "!VVFLAG!" == "" (
 IF NOT "!SFLAG!" == "" (
 	CALL :major !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
-		ECHO Java release 19 or above required for -s>&2
+		ECHO [91m!PROG![0m: Java release 19 or above required for -s>&2
 		EXIT /B 1
 	)
 )
 IF NOT "!FFLAG!" == "" (
 	CALL :major !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
-		ECHO Java release 19 or above required for -f>&2
+		ECHO [91m!PROG![0m: Java release 19 or above required for -f>&2
 		EXIT /B 1
 	)
 )
@@ -232,7 +234,7 @@ IF NOT "!PFLAG!" == "" (
 		IF NOT "!VFLAG!" == "" (
 			TYPE !KRB5CCNAME!.log
 		) ELSE (
-			ECHO Bad password
+			ECHO [91m!PROG![0m: Bad password
 		)
 		EXIT /B 1
 	)

@@ -4,13 +4,14 @@ REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
+SET PROG=krb_kdestroy
 SET REALM=%USERDNSDOMAIN%
 
 IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO Invalid SQL Developer home
+	ECHO [91m!PROG![0m: Invalid SQL Developer home
 	EXIT /B 1
 )
 

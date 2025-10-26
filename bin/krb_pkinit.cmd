@@ -4,6 +4,8 @@ REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
+SET PROG=krb_pkinit
+
 SET REALM=%USERDNSDOMAIN%
 
 SET KINITOPTS=

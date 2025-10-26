@@ -4,6 +4,8 @@ REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
+SET PROG=krb_sql
+
 SET ORACLE_HOME=
 IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
@@ -11,7 +13,7 @@ IF "%SQLDEV_HOME%" == "" (
 SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO Invalid SQL Developer home>&2
+	ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
 	EXIT /B 1
 )
 
@@ -167,7 +169,7 @@ IF NOT "!TNS_ADMIN!" == "" (
 	IF NOT EXIST "!TNS_ADMIN!\tnsnames.ora" (
 		IF "!EFLAG!" == "" (
 			IF "!ERRFLAG!" == "" (
-				ECHO TNS File !TNS_ADMIN!\tnsnames.ora does not exist>&2
+				ECHO [91m!PROG![0m: TNS File !TNS_ADMIN!\tnsnames.ora does not exist>&2
 				EXIT /B 1
 			)
 		)
@@ -177,11 +179,11 @@ IF NOT "!TNS_ADMIN!" == "" (
 
 IF NOT "!AFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\awk.exe" (
-		ECHO Install Git for Windows to use this option>&2
+		ECHO [91m!PROG![0m: Install Git for Windows to use this option>&2
 		exit /B 1
 	)
 	IF "!TNS_ADMIN!" == "" (
-		ECHO TNS_ADMIN not set or no default>&2
+		ECHO [91m!PROG![0m: TNS_ADMIN not set or no default>&2
 		exit /B 1
 	)
 	awk "/^[A-Z0-1]* =/ { print $1 }" %TNS_ADMIN%\tnsnames.ora
@@ -217,7 +219,7 @@ IF "!JJFLAG!" == "" (
 )
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 		SET ERRFLAG=Y
 	)
@@ -255,21 +257,21 @@ IF NOT "!IFLAG!" == "" (
 	REM ECHO set sqlprompt "@red| SQL|@> " > !SQLPATH!\login.sql
 	
 	SET colour=31
-	CALL :hexprint "set sqlprompt 0x220x1b[!colour!mSQL0x1b[0m0x3e 0x22" > !SQLPATH!\login.sql
+	CALL :hexprint "set sqlprompt 0x220x1b[!colour!mSQL0x1b[0m0x3e 0x22"> !SQLPATH!\login.sql
 
-	ECHO set statusbar on >> !SQLPATH!\startup.sql
-	ECHO set statusbar add editmode >> !SQLPATH!\startup.sql
-	ECHO set statusbar add txn >> !SQLPATH!\startup.sql
-	ECHO set statusbar add timing >> !SQLPATH!\startup.sql
-	ECHO set highlighting on >> !SQLPATH!\startup.sql
-	ECHO set highlighting keyword foreground green >> !SQLPATH!\startup.sql
-	ECHO set highlighting identifier foreground magenta >> !SQLPATH!\startup.sql
-	ECHO set highlighting string foreground yellow >> !SQLPATH!\startup.sql
-	ECHO set highlighting number foreground cyan >> !SQLPATH!\startup.sql
-	ECHO set highlighting comment background white >> !SQLPATH!\startup.sql
-	ECHO set highlighting comment foreground black >> !SQLPATH!\startup.sql
-	ECHO set sqlformat ansiconsole -config=!SQLPATH!\highlight.json >> !SQLPATH!\startup.sql
-	ECHO -- FORMAT RULES !SQLPATH!\formatter-rules.xml >> !SQLPATH!\startup.sql
+	ECHO set statusbar on>> !SQLPATH!\startup.sql
+	ECHO set statusbar add editmode>> !SQLPATH!\startup.sql
+	ECHO set statusbar add txn>> !SQLPATH!\startup.sql
+	ECHO set statusbar add timing>> !SQLPATH!\startup.sql
+	ECHO set highlighting on>> !SQLPATH!\startup.sql
+	ECHO set highlighting keyword foreground green>> !SQLPATH!\startup.sql
+	ECHO set highlighting identifier foreground magenta>> !SQLPATH!\startup.sql
+	ECHO set highlighting string foreground yellow>> !SQLPATH!\startup.sql
+	ECHO set highlighting number foreground cyan>> !SQLPATH!\startup.sql
+	ECHO set highlighting comment background white>> !SQLPATH!\startup.sql
+	ECHO set highlighting comment foreground black>> !SQLPATH!\startup.sql
+	ECHO set sqlformat ansiconsole -config=!SQLPATH!\highlight.json>> !SQLPATH!\startup.sql
+	ECHO -- FORMAT RULES !SQLPATH!\formatter-rules.xml>> !SQLPATH!\startup.sql
 )
 IF NOT "!XFLAG!" == "" (
 	SET KRB5_TRACE=%TEMP%\krb5_trace.log

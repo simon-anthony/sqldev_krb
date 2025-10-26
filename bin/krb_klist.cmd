@@ -4,6 +4,7 @@ REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
+SET PROG=krb_klist
 SET REALM=%USERDNSDOMAIN%
 
 IF "%SQLDEV_HOME%" == "" (
@@ -102,7 +103,7 @@ SET NAME=%~1
 
 IF "!MMFLAG!" == "" (
 	IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-		ECHO Invalid SQL Developer home>&2
+		ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
 		EXIT /B 1
 	)
 	IF NOT "!KFLAG!" == "" (
@@ -117,7 +118,7 @@ IF "!MMFLAG!" == "" (
 	)
 	IF NOT "%JAVA_HOME%" == "" (
 		IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-			ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+			ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
 			IF "!ERRFLAG!" == "" EXIT /B 1
 			SET ERRFLAG=Y
 		)
@@ -157,7 +158,7 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_BIN=%JAVA_HOME%\bin

@@ -4,6 +4,7 @@ REM vim: fileformat=dos:
 
 SETLOCAL enabledelayedexpansion
 
+SET PROG=krb_conf
 REM realm in upper case
 SET REALM=%USERDNSDOMAIN%
 CALL :toUpper REALM
@@ -97,11 +98,11 @@ GOTO parse
 :endparse
 
 IF "%SQLDEV_HOME%" == "" (
-	ECHO SQLDEV_HOME must be set in the environment or set with -h>&2
+	ECHO [91m!PROG![0m: SQLDEV_HOME must be set in the environment or set with -h>&2
 	EXIT /B 1
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO Invalid SQL Developer home>&2
+	ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
 	EXIT /B 1
 )
 
@@ -121,7 +122,7 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO Invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_CONFIG=%JAVA_HOME%\conf\security\krb5.conf
