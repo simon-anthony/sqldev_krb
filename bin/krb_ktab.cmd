@@ -194,7 +194,6 @@ IF NOT "!JAVA_HOME!" == "" (
 ) ELSE (
 	CALL :javaversion !SQLDEV_HOME!\jdk\jre VERSION
 )
-
 IF NOT "!VVFLAG!" == "" (
 	ECHO !VERSION!
 	EXIT /B 0

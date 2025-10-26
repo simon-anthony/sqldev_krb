@@ -89,6 +89,9 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-E" (
 	SHIFT
 	SET EEFLAG=y
+) ELSE IF "%option%" == "-V" (
+	SHIFT
+	SET VVFLAG=y
 ) ELSE (
 	SET ERRFLAG=Y
 	GOTO endparse
@@ -161,18 +164,22 @@ IF NOT "!JAVA_HOME!" == "" (
 ) ELSE (
 	CALL :javaversion !SQLDEV_HOME!\jdk\jre VERSION
 )
+IF NOT "!VVFLAG!" == "" (
+	ECHO !VERSION!
+	EXIT /B 0
+)
 
 REM Maximum Java version supported by IDE is 21.1
 IF "!UFLAG!" == "" (
 	CALL :versionpart !VERSION! MAJOR
-	IF NOT !MAJOR! GTR 21 (
-		ECHO [93m!PROG![0m: Java releases above 21.1 not supported by IDE>&2
+	CALL :versionpart !VERSION! MINOR 2
+	IF !MAJOR! GTR 21 (
+		ECHO [93m!PROG![0m: Java releases [!MAJOR!.!MINOR!] above 21.1 not supported by IDE>&2
 		REM EXIT /B 1
 	)
-	IF NOT !MAJOR! EQU 21 (
-		CALL :versionpart !VERSION! MINOR 2
-		IF NOT !MINOR! GTR 1 (
-			ECHO [93m!PROG![0m: Java releases above 21.1 not supported by IDE>&2
+	IF !MAJOR! EQU 21 (
+		IF !MINOR! GTR 1 (
+			ECHO [93m!PROG![0m: Java releases [!MAJOR!.!MINOR!] above 21.1 not supported by IDE>&2
 			REM EXIT /B 1
 		)
 	)
@@ -304,6 +311,7 @@ EXIT /B 0
 	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
 	ECHO   [93m-w[0m               Write value of [33mjava_home[0m to [032mproduct.conf[0m>&2
 	ECHO   [93m-u[0m               Unset [33mjava_home[0m in [32mproduct.conf[0m>&2
+	ECHO   [93m-V[0m               Print Java version and exit
 ENDLOCAL
 EXIT /B 1
 
@@ -375,6 +383,7 @@ REM retrieve a setting from a .conf file
 	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 EXIT /B 0
 
+REM for OCI clients, not used at present
 :createsqlnetora
 	REM okinit needs sqlnet.ora for configuration settings....
 

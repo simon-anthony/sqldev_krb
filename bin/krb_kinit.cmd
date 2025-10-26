@@ -277,3 +277,7 @@ REM retrieve a setting from a .conf file
 	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 EXIT /B 0
 
+REM print Java version
+:javaversion java_home vers
+	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
+EXIT /B 0
