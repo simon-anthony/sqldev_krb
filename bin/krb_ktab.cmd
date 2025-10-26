@@ -201,14 +201,14 @@ IF NOT "!VVFLAG!" == "" (
 )
 
 IF NOT "!SFLAG!" == "" (
-	CALL :major !VERSION! MAJOR
+	CALL :versionpart !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
 		ECHO [91m!PROG![0m: Java release 19 or above required for -s>&2
 		EXIT /B 1
 	)
 )
 IF NOT "!FFLAG!" == "" (
-	CALL :major !VERSION! MAJOR
+	CALL :versionpart !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
 		ECHO [91m!PROG![0m: Java release 19 or above required for -f>&2
 		EXIT /B 1
@@ -255,7 +255,7 @@ EXIT /B 0
 	ECHO   [93m-v[0m               Verbose messages
 	ECHO   [93m-D[0m               Turn on krb5.debug
 	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)
-	ECHO   [93m-s[0m [33msalt[0m          Specify the salt to use
+	ECHO   [93m-s[0m [33msalt[0m          Specify the salt to use e.g. if sAMAccountName does not match userPrincipalName
 	ECHO   [93m-f[0m               Request salt from KDC
 	ECHO   [93m-V[0m               Print Java version and exit
 	IF NOT "!JAVA_HOME!" == "" (
@@ -290,10 +290,6 @@ REM print Java version
 	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
 EXIT /B 0
 
-:major str var
-        FOR /F "tokens=1 delims=." %%i IN ("%1") DO (CALL set %~2=%%~i%%)
-EXIT /B 0
-
 REM retrieve a setting from a .properties file
 :getprop str file
         FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
@@ -303,4 +299,14 @@ EXIT /B 0
 REM retrieve a setting from a .conf file
 :getconf str file
 	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
+EXIT /B 0
+
+REM extract nth part of version number n.n.n - n default 1
+:versionpart version var n
+	IF "%3" == "" (
+		SET _part=1
+	) ELSE (
+		SET _part=%3
+	)
+	FOR /F "tokens=%_part% delims=." %%i IN ("%1") DO (CALL set %~2=%%~i%%)
 EXIT /B 0

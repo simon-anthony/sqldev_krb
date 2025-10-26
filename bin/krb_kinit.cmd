@@ -41,7 +41,7 @@ IF "%JAVA_HOME%" == "" (
 	SET _JAVA_HOME_SOURCE=[96m
 )
 
-SET ERRFLAG= 
+SET ERRFLAG=
 
 :parse
 IF "%1" == "" GOTO endparse
@@ -173,12 +173,11 @@ IF NOT "!KRB5_KTNAME!" == "" (
 	)
 )
 
-IF NOT "!ERRFLAG!" == "" GOTO usage
-
 IF NOT "!EFLAG!" == "" (
 	ECHO kinit !KINITOPTS! !PRINCIPAL!
 	EXIT /B 0
 )
+
 IF NOT "!XFLAG!" == "" (
 	SET KRB5_TRACE=%TEMP%\krb5_trace.log
 	ECHO. > !KRB5_TRACE!
@@ -217,6 +216,9 @@ IF NOT "%JAVA_HOME%" == "" (
 ) ELSE (
 	SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
 )
+
+IF NOT "!ERRFLAG!" == "" GOTO usage
+
 SET PATH=!KRB5_BIN!;%PATH%
 
 kinit !KINITOPTS! !PRINCIPAL!

@@ -155,6 +155,29 @@ IF "%CFLAG%" == "" (
 		SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
 	)
 )
+
+IF NOT "!JAVA_HOME!" == "" (
+	CALL :javaversion !JAVA_HOME! VERSION
+) ELSE (
+	CALL :javaversion !SQLDEV_HOME!\jdk\jre VERSION
+)
+
+REM Maximum Java version supported by IDE is 21.1
+IF "!UFLAG!" == "" (
+	CALL :versionpart !VERSION! MAJOR
+	IF NOT !MAJOR! GTR 21 (
+		ECHO [93m!PROG![0m: Java releases above 21.1 not supported by IDE>&2
+		REM EXIT /B 1
+	)
+	IF NOT !MAJOR! EQU 21 (
+		CALL :versionpart !VERSION! MINOR 2
+		IF NOT !MINOR! GTR 1 (
+			ECHO [93m!PROG![0m: Java releases above 21.1 not supported by IDE>&2
+			REM EXIT /B 1
+		)
+	)
+)
+
 IF NOT "!ERRFLAG!" == "" GOTO usage
 
 IF NOT "!EFLAG!" == "" (
@@ -166,21 +189,22 @@ SET BIN=%~dp0
 SET ETC=%bin:\bin=%etc
 
 IF EXIST !ETC!\krb5.conf (
-	ECHO Template krb5.conf copied to !KRB5_CONFIG!
+	ECHO [92m!PROG![0m: template krb5.conf copied to !KRB5_CONFIG!
 	COPY /V !ETC!\krb5.conf !KRB5_CONFIG!
 ) ELSE (
-	ECHO New krb5.conf created at !KRB5_CONFIG!
+	ECHO [92m!PROG![0m: new krb5.conf created at !KRB5_CONFIG!
 	CALL :createkrb5conf
 )
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 	ECHO. >> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
+	ECHO [92m!PROG![0m: including kerberos.conf in nondebug
 	ECHO IncludeConfFile kerberos.conf>> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
 )
 
-
 REM Create startup script
 
+ECHO [92m!PROG![0m: creating startup script: !SQLDEV_HOME!\krb_sqldeveloper.cmd
 ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqldeveloper.log 2^>^&1 ^&^& !SQLDEV_HOME!\sqldeveloper.exe >!SQLDEV_HOME!\krb_sqldeveloper.cmd
 REM If we have Git for Windows installed we can create the shortcut
 REM Usage: create-shortcut [options] <source> <destination>
@@ -191,7 +215,7 @@ REM --icon-file (allows specifying the path to an icon file for the shortcut)
 REM --description ('Comment' field)
 REM 
 IF EXIST "C:\Program Files\Git\mingw64\bin\create-shortcut.exe" (
-	ECHO Creating Desktop shortcut: !SHORTCUT!
+	ECHO [92m!PROG![0m: creating Desktop shortcut: !SHORTCUT!
 	create-shortcut.exe --work-dir "!SQLDEV_HOME!" --icon-file "!SQLDEV_HOME!\sqldeveloper.exe" --description "Kerberos kinit for SQL Developer created by krb_conf" "!SQLDEV_HOME!\krb_sqldeveloper.cmd" "%USERPROFILE%\Desktop\!SHORTCUT!.lnk"
 )
 
@@ -207,29 +231,36 @@ IF NOT "!EEFLAG!" == "" (
 )
 
 REM Relative path
+ECHO [92m!PROG![0m: writing properties to kerberos.conf
 ECHO AddVMOption -Dsun.security.krb5.debug=true> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM Moot. SQL Developer looks for this anyway:
 ECHO AddVMOption -Djava.security.krb5.conf=../../jdk/jre/conf/security/krb5.conf>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO AddVMOption -Djava.security.krb5.conf=!KRB5_CONFIG!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM Usually these work - but SQL Developer loads too late in startup to have an effect:
 REM ECHO AddVMOption -Djava.security.krb5.realm=!REALM!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.krb5.kdc=!KDC!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.auth.login.config=%HOMEPATH%/.java.login.config>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+REM  https://openjdk.org/jeps/486 - warnings for use of security manager become errors
+IF !MAJOR! GTR 21 (
+	ECHO [92m!PROG![0m: disallowing security.manager in kerberos.conf version !MAJOR!
+	ECHO AddVMOption -Djava.security.manager=disallow>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+)
 
 IF NOT "!PFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO Install Git for Windows to use -p option>&2
-		exit /B 1
+		ECHO [91m!PROG![0m: install Git for Windows to use -p option>&2
+		EXIT /B 1
 	)
 
 	SET PREFS_FILE=%APPDATA%\SQL Developer\system!VER_FULL!\o.sqldeveloper\product-preferences.xml
 	IF NOT EXIST "!PREFS_FILE!" (
-		ECHO cannot open !PREFS_FILE!>&2
+		ECHO [91m!PROG![0m: cannot open !PREFS_FILE!>&2
 		EXIT /B 1
 	)
 	REM if not there add:
 	REM       <value n="KERBEROS_CACHE" v="C:/Users/demo/AppData/Local/krb5cc_demo"/>
 	REM       <value n="KERBEROS_CONFIG" v="C:/Oracle/jdk-25.0.1/conf/security/krb5.conf"/>
-	ECHO Updating preferences: !PREFS_FILE!
+	ECHO [92m!PROG![0m: updating preferences: !PREFS_FILE!
 	ECHO  KERBEROS_CACHE = !KERBEROS_CACHE! | sed "s;\\\\\{1,\\};\\\;g"
 	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG! | sed "s;\\\\\{1,\\};\\\;g"
 
@@ -238,19 +269,19 @@ IF NOT "!PFLAG!" == "" (
 
 IF NOT "!WFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO Install Git for Windows to use -w option>&2
-		exit /B 1
+		ECHO [91m!PROG![0m: install Git for Windows to use -w option>&2
+		EXIT /B 1
 	)
 	CALL :escape JAVA_HOME
-	ECHO Setting SetJavaHome in !CONF!
+	ECHO [92m!PROG![0m: setting SetJavaHome in !CONF!
 	sed --in-place=.bak '/^^#* *SetJavaHome / {s@.*@SetJavaHome '!JAVA_HOME!'@; }' "!CONF!"
 )
 IF NOT "!UFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO Install Git for Windows to use -u option>&2
-		exit /B 1
+		ECHO [91m!PROG![0m: install Git for Windows to use -u option>&2
+		EXIT /B 1
 	)
-	ECHO Unsetting SetJavaHome in !CONF!
+	ECHO [92m!PROG![0m: unsetting SetJavaHome in !CONF!
 	sed --in-place=.bak '/[^^#]* *SetJavaHome / { s@^^ *@# ^&@; }' "!CONF!"
 )
 
@@ -370,3 +401,18 @@ EXIT /B 0
 	ECHO TRACE_LEVEL_CLIENT = OFF>> !SQLNET_ORA!
 	ECHO TRACE_DIRECTORY_CLIENT = !TNS_ADMIN!>> !SQLNET_ORA!
 EXIT /B
+
+REM print Java version
+:javaversion java_home vers
+	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
+EXIT /B 0
+
+REM extract nth part of version number n.n.n - n default 1
+:versionpart version var n
+	IF "%3" == "" (
+		SET _part=1
+	) ELSE (
+		SET _part=%3
+	)
+	FOR /F "tokens=%_part% delims=." %%i IN ("%1") DO (CALL set %~2=%%~i%%)
+EXIT /B 0
