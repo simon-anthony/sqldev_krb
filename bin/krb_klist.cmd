@@ -211,17 +211,18 @@ EXIT /B 0
 ENDLOCAL
 EXIT /B 1
 
+REM javaversion: print Java version
 :javaversion java_home vers
 	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
 EXIT /B 0
 
-REM retrieve a setting from a .properties file
+REM getprop: retrieve a setting from a .properties file
 :getprop str file
         FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 
 EXIT /B 0
 
-REM retrieve a setting from a .conf file
+REM getconf: retrieve a setting from a .conf file
 :getconf str file
 	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 EXIT /B 0

@@ -268,6 +268,7 @@ EXIT /B 0
 ENDLOCAL
 EXIT /B 1
 
+REM toUpper: make str uppercase
 :toUpper str
 	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
 		"j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
@@ -276,6 +277,7 @@ EXIT /B 1
 	)
 EXIT /B 0
 
+REM toLower: make str lowercase
 :toLower str
 	FOR %%a IN ("A=a" "B=b" "C=c" "D=d" "E=e" "F=f" "G=g" "H=h" "I=i"
 		"J=j" "K=k" "L=l" "M=m" "N=n" "O=o" "P=p" "Q=q" "R=r"
@@ -284,23 +286,23 @@ EXIT /B 0
 	)
 EXIT /B 0
 
-REM print Java version
+REM javaversion: print Java version
 :javaversion java_home vers
 	FOR /f "tokens=3" %%i IN ('%1\bin\java -version 2^>^&1^|findstr version') DO (CALL set %~2=%%~i%%)
 EXIT /B 0
 
-REM retrieve a setting from a .properties file
+REM getprop: retrieve a setting from a .properties file
 :getprop str file
         FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 
 EXIT /B 0
 
-REM retrieve a setting from a .conf file
+REM getconf: retrieve a setting from a .conf file
 :getconf str file
 	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 EXIT /B 0
 
-REM extract nth part of version number n.n.n - n default 1
+REM versionpart: extract nth part of version number n.n.n - n default 1
 :versionpart version var n
 	IF "%3" == "" (
 		SET _part=1

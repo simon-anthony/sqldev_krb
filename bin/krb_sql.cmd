@@ -278,13 +278,16 @@ IF NOT "!KRB5_CONFIG!" == "" (
 )
 
 IF NOT "!KRB5CCNAME!" == "" (
-	SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
+	REM JAAS set Cache
+	IF "!JFLAG!" == "" SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
 )
 
-IF NOT "!ERRFLAG!" == "" GOTO usage
+REM IF NOT "!ERRFLAG!" == "" GOTO usage
 
 IF NOT "!PFLAG!" == "" (
+	IF "!ERRFLAG!" == "" (
 		SET /p p="Enter TNS alias: "
+	)
 ) ELSE (
 	SET p=%~1
 )
@@ -320,13 +323,20 @@ IF NOT "!XFLAG!" == "" (
 )
 
 IF NOT "!WFLAG!" == "" (
-	IF EXIST !JAAS_CONFIG! DEL !JAAS_CONFIG!
+	IF "!ERRFLAG!" == "" (
+		IF "!EFLAG!" == "" (
+			IF EXIST !JAAS_CONFIG! DEL !JAAS_CONFIG!
+		)
+	)
 )
 IF NOT "!JFLAG!" == "" (
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
 	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk
 	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=!NAME!
 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
+	REM SET _KRB5CCNAME_SOURCE=[38;5;108m
+	REM SET _KRB5CCNAME_SOURCE=[38;5;104m
+	SET _KRB5CCNAME_SOURCE=[38;5;115m
 )
 IF NOT "!EFLAG!" == "" (
 	IF NOT "!XFLAG!" == "" (
@@ -340,6 +350,9 @@ IF NOT "!EFLAG!" == "" (
 	ECHO sql %SQLOPTS% /@%alias%
 	EXIT /B 0
 )
+
+IF NOT "!ERRFLAG!" == "" GOTO usage
+
 SET PATH="!SQLPATH!\bin";%PATH%
 
 sql %SQLOPTS% /@%alias%
@@ -355,12 +368,17 @@ EXIT /B 0
 	ECHO   [93m-L[0m               Unset any value of [96mKRB5_CONFIG[0m and [31minternal[0m default i.e. use [35mDNS SRV[0m lookup>&2
 	ECHO   [93m-t[0m [33mtns_admin[0m     Specify [96mTNS_ADMIN[0m (default: !_TNS_SOURCE!!TNS_ADMIN![0m^)>&2
 	ECHO                     if not in [96menvironment[0m try [36mregistry[0m>&2
-	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	IF NOT "!JFLAG!" == "" (
+		ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!JAAS[0m^)>&2
+	) ELSE (
+		ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
+	)
 	ECHO   [93m-C[0m               Unset any default value of [96mKRB5CCNAME[0m>&2
 	ECHO   [93m-e[0m               Echo the command only>&2
 	ECHO   [93m-i[0m               Install a template startup.sql>&2
-	ECHO   [93m-j[0m               Use JAAS - overide the default file with [96mJAAS_CONFIG[0m >&2
-	ECHO   [93m-w[0m               Overwrite JAAS configuration !_JAAS_CONFIG_SOURCE!!JAAS_CONFIG![0m>&2
+	ECHO   [93m-j[0m               Use [38;5;115mJAAS[0m. The environment variable [96mJAAS_CONFIG[0m can be set to use>&2
+        ECHO                     another login file (default: [31m!HOMEDRIVE!!HOMEPATH!\.java.login.config[0m^)>&2
+	ECHO   [93m-w[0m               Overwrite [38;5;115mJAAS[0m configuration with internal defaults>&2
 	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)>&2
 	IF NOT "!JAVA_HOME!" == "" (
 		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
@@ -384,31 +402,48 @@ EXIT /B 1
 EXIT /B
 
 REM jaasconfig: create JAAS Config using keytab and cache
+REM When multiple mechanisms to retrieve a ticket or key are provided, the preference order is:
+REM    1. ticket cache
+REM    2. keytab
+REM    3. shared state
+REM    4. user prompt
+REM MB JAAS defaults for cache and keytab differ from MIT
 :jaasconfig
-	SET _KRB5CCNAME=!KRB5CCNAME!
 	SET _KRB5_KTNAME=!KRB5_KTNAME!
-	CALL :canon  _KRB5CCNAME
 	CALL :canon  _KRB5_KTNAME
 	ECHO !NAME! { > !JAAS_CONFIG!
   	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
   	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
   	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
   	ECHO   useTicketCache=true>> !JAAS_CONFIG!
-  	ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
+  	REM There are many combinations of KRB5CCNAME or -krb5ccname and ticketCache
+	IF NOT "!KRB5CCNAME!" == "" (
+		REM If not specified default is {user.home}{file.separator}krb5cc_{user.name}
+		SET _KRB5CCNAME=!KRB5CCNAME!
+		CALL :canon  _KRB5CCNAME
+		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
+	)
   	ECHO   useKeyTab=true>> !JAAS_CONFIG!
+	REM If not specified default is {user.home}{file.separator}krb5.keytab
   	ECHO   keyTab="FILE:!_KRB5_KTNAME!">> !JAAS_CONFIG!
-  	REM It is less problematic to use KRB5CCNAME or -krb5ccname than specify ticketCache
-  	REM ECHO   ticketCache=!KRB5CCNAME!>> !JAAS_CONFIG!
+	REM Required to negotiate with KDC when requesting TGT
+	CALL :getuserprincipal PRINCIPAL
+	CALL :formatprincipal PRINCIPAL 
+  	REM ECHO   principal=!USERNAME!>> !JAAS_CONFIG!
+  	REM ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
+  	ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
   	ECHO   storeKey=false>> !JAAS_CONFIG!
   	ECHO   renewTGT=false>> !JAAS_CONFIG!
   	ECHO   debug=!DEBUG!;>> !JAAS_CONFIG!
 	ECHO }; >> !JAAS_CONFIG!
 EXIT /B
+
+REM regquery: retrieve value of str from HKLM\SOFTWARE\ORACLE
 :regquery str
-	REM Retrieve value of str from HKLM\SOFTWARE\ORACLE
 	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (CALL set %~1=%%i%%)
 EXIT /B 0
 
+REM toUpper: make str uppercase
 :toUpper str
 	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
 		"j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
@@ -417,6 +452,7 @@ EXIT /B 0
 	)
 EXIT /B 0
 
+REM toLower: make str lowercase
 :toLower str
 	FOR %%a IN ("A=a" "B=b" "C=c" "D=d" "E=e" "F=f" "G=g" "H=h" "I=i"
 		"J=j" "K=k" "L=l" "M=m" "N=n" "O=o" "P=p" "Q=q" "R=r"
@@ -441,4 +477,18 @@ REM canon: canonicalize path URLs for Java
 	FOR %%a IN ("\=/") DO (
 		CALL SET %~1=%%%~1:%%~a%%
 	)
+EXIT /B 0
+
+REM getuserprincipal: set user to userPrincipalName
+:getuserprincipal user
+	FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser %USERNAME% ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
+EXIT /B 0
+
+REM formatprincipal: format principal to standard Kerberos capitalization return value in var
+:formatprincipal principal
+	CALL SET _principal=%%%~1%%%
+	FOR /f "delims=@" %%i IN ("%_principal%") DO (set _primary=%%i)
+	FOR /f "tokens=2 delims=@" %%i IN ("%_principal%") DO (set _realm=%%i)
+	CALL :toupper _realm
+	CALL SET %~1=%%_primary%%@%%_realm%%
 EXIT /B 0
