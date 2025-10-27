@@ -29,6 +29,7 @@ IF "%JAVA_HOME%" == "" (
 )
 
 SET SHORTCUT=sqldeveloper
+SET SHORTCUTSQL=sql
 SET ERRFLAG=
 
 :parse
@@ -211,8 +212,18 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 
 REM Create startup script
 
-ECHO [92m!PROG![0m: creating startup script: !SQLDEV_HOME!\krb_sqldeveloper.cmd
-ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqldeveloper.log 2^>^&1 ^&^& !SQLDEV_HOME!\sqldeveloper.exe >!SQLDEV_HOME!\krb_sqldeveloper.cmd
+ECHO|SET /p="[92m!PROG![0m: creating startup scripts: "
+
+ECHO|SET /p="krb_sqldeveloper.cmd "
+ECHO @ECHO OFF> !SQLDEV_HOME!\krb_sqldeveloper.cmd
+ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqldeveloper.log 2^>^&1 ^&^& !SQLDEV_HOME!\sqldeveloper.exe>> !SQLDEV_HOME!\krb_sqldeveloper.cmd
+
+ECHO|SET /p="krb_sqlcl.cmd "
+ECHO @ECHO OFF> !SQLDEV_HOME!\krb_sqlcl.cmd
+ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqlcl.log 2^>^&1 ^&^& CALL %~dp0krb_sql.cmd -K -p>> !SQLDEV_HOME!\krb_sqlcl.cmd
+
+ECHO.
+
 REM If we have Git for Windows installed we can create the shortcut
 REM Usage: create-shortcut [options] <source> <destination>
 REM --work-dir ('Start in' field)
@@ -222,8 +233,15 @@ REM --icon-file (allows specifying the path to an icon file for the shortcut)
 REM --description ('Comment' field)
 REM 
 IF EXIST "C:\Program Files\Git\mingw64\bin\create-shortcut.exe" (
-	ECHO [92m!PROG![0m: creating Desktop shortcut: !SHORTCUT!
+	ECHO|SET /p="[92m!PROG![0m: creating Desktop shortcuts: "
+
+	ECHO|SET /p="!SHORTCUT! "
 	create-shortcut.exe --work-dir "!SQLDEV_HOME!" --icon-file "!SQLDEV_HOME!\sqldeveloper.exe" --description "Kerberos kinit for SQL Developer created by krb_conf" "!SQLDEV_HOME!\krb_sqldeveloper.cmd" "%USERPROFILE%\Desktop\!SHORTCUT!.lnk"
+
+	ECHO|SET /p="!SHORTCUTSQL! "
+	create-shortcut.exe --work-dir "!SQLDEV_HOME!" --icon-file "!SQLDEV_HOME!\sqldeveloper\bin\sql.exe" --description "Kerberos kinit for SQLcl created by krb_conf" "!SQLDEV_HOME!\krb_sqlcl.cmd" "%USERPROFILE%\Desktop\!SHORTCUTSQL!.lnk"
+
+	ECHO.
 )
 
 SET KERBEROS_CACHE=!KRB5CCNAME:FILE:=!
@@ -241,13 +259,16 @@ REM Relative path
 ECHO [92m!PROG![0m: writing properties to kerberos.conf
 ECHO AddVMOption -Dsun.security.krb5.debug=true> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM Moot. SQL Developer looks for this anyway:
-ECHO AddVMOption -Djava.security.krb5.conf=../../jdk/jre/conf/security/krb5.conf>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+REM ECHO AddVMOption -Djava.security.krb5.conf=../../jdk/jre/conf/security/krb5.conf>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 ECHO AddVMOption -Djava.security.krb5.conf=!KRB5_CONFIG!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM Usually these work - but SQL Developer loads too late in startup to have an effect:
 REM ECHO AddVMOption -Djava.security.krb5.realm=!REALM!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.krb5.kdc=!KDC!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.auth.login.config=%HOMEPATH%/.java.login.config>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM  https://openjdk.org/jeps/486 - warnings for use of security manager become errors
+SET JAAS_CONFIG=%HOMEDRIVE%%HOMEPATH%\.java.login.config
+ECHO AddVMOption -Djava.security.auth.login.config=!JAAS_CONFIG!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO AddVMOption -Doracle.net.KerberosJaasLoginModule=Oracle>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 IF !MAJOR! GTR 21 (
 	ECHO [92m!PROG![0m: disallowing security.manager in kerberos.conf version !MAJOR!
 	ECHO AddVMOption -Djava.security.manager=disallow>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf

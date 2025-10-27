@@ -39,6 +39,9 @@ IF "%KRB5CCNAME%" == "" (
 	SET _KRB5CCNAME_SOURCE=[96m
 )
 
+REM TODO: add -k krb5_ktname|-K options
+SET KRB5_KTNAME=!LOCALAPPDATA!\krb5_!USERNAME!.keytab
+
 IF "%JAAS_CONFIG%" == "" (
 	REM This is the default file used in <jre_home>\conf\security\java.security
 	SET JAAS_CONFIG=%HOMEDRIVE%%HOMEPATH%\.java.login.config
@@ -61,7 +64,7 @@ set LF=^
 SET ERRFLAG=
 
 :parse
-IF "%1" == "" SET ERRFLAG=Y
+REM IF "%1" == "" SET ERRFLAG=Y
 
 SET option=%~1
 SET arg=%~2
@@ -73,26 +76,38 @@ IF "%option%" == "-k" (
 		SET _KRB5_CONFIG_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		SET ERRFLAG=y
+		SET ERRFLAG=Y
 	)
-	SET KFLAG=y
+	IF NOT "!LLFLAG!" == "" SET ERRFLAG=Y
+	IF NOT "!KKFLAG!" == "" SET ERRFLAG=Y
+	SET KFLAG=Y
 ) ELSE IF "%option%" == "-t" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET TNS_ADMIN=%arg%
 		SHIFT
 	) ELSE (
-		SET ERRFLAG=y
+		SET ERRFLAG=Y
 	)
 	SET _TNS_SOURCE=[33m
-	SET TFLAG=y
+	SET TFLAG=Y
 	IF NOT "!AFLAG!" == "" (
 		GOTO endparse
 	)
 ) ELSE IF "%option%" == "-K" (
 	SHIFT
 	SET KRB5_CONFIG=
-	SET KKFLAG=y
+	SET _KRB5_CONFIG_SOURCE=[31m
+	IF NOT "!KFLAG!" == "" SET ERRFLAG=Y
+	IF NOT "!LLFLAG!" == "" SET ERRFLAG=Y
+	SET KKFLAG=Y
+) ELSE IF "%option%" == "-L" (
+	SHIFT
+	SET KRB5_CONFIG=
+	SET _KRB5_CONFIG_SOURCE=[35m
+	IF NOT "!KFLAG!" == "" SET ERRFLAG=Y
+	IF NOT "!KKFLAG!" == "" SET ERRFLAG=Y
+	SET LLFLAG=Y
 ) ELSE IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
@@ -100,39 +115,46 @@ IF "%option%" == "-k" (
 		SET _KRB5CCNAME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		SET ERRFLAG=y
+		SET ERRFLAG=Y
 	)
-	SET CFLAG=y
+	IF NOT "!CCFLAG!" == "" SET ERRFLAG=Y
+	SET CFLAG=Y
 ) ELSE IF "%option%" == "-C" (
 	SHIFT
 	SET KRB5CCNAME=
-	SET CCFLAG=y
+	IF NOT "!CFLAG!" == "" SET ERRFLAG=Y
+	SET CCFLAG=Y
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
-	SET EFLAG=y
+	SET EFLAG=Y
 ) ELSE IF "%option%" == "-i" (
 	SHIFT
-	SET IFLAG=y
+	SET IFLAG=Y
 ) ELSE IF "%option%" == "-j" (
 	SHIFT
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
-	SET JFLAG=y
+	SET JFLAG=Y
 ) ELSE IF "%option%" == "-a" (
 	REM this option needs Git for Windows UNIX tools
 	SHIFT
-	SET AFLAG=y
 	IF "%arg%" == "" (
 		GOTO endparse
 	)
 	IF NOT "!TFLAG!" == "" (
 		GOTO endparse
 	)
+	IF NOT "!PFLAG!" == "" SET ERRFLAG=y
+	SET AFLAG=Y
 ) ELSE IF "%option%" == "-x" (
 	SHIFT
-	SET XFLAG=y
+	SET XFLAG=Y
 ) ELSE IF "%option%" == "-w" (
 	SHIFT
-	SET WFLAG=y
+	SET WFLAG=Y
+) ELSE IF "%option%" == "-p" (
+	SHIFT
+	IF NOT "!AFLAG!" == "" SET ERRFLAG=Y
+	SET PFLAG=Y
 ) ELSE IF "%option%" == "-J" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
@@ -140,15 +162,15 @@ IF "%option%" == "-k" (
 		SET _JAVA_HOME_SOURCE=[33m
 		SHIFT
 	) ELSE (
-		SET ERRFLAG=y
+		SET ERRFLAG=Y
 	)
-	SET JJFLAG=y
+	SET JJFLAG=Y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
 	GOTO endparse
 ) ELSE (
-	SET ERRFLAG=y
+	IF "!PFLAG!" == "" SET ERRFLAG=Y
 	GOTO endparse
 )
 
@@ -156,7 +178,13 @@ GOTO parse
 :endparse
 
 IF "%1" == "" (
-	IF "!AFLAG!" == "" SET ERRFLAG=Y
+	IF NOT "!PFLAG!"! == "" (
+		REM prompt for TNS alias
+	) ELSE (
+		IF "!AFLAG!" == "" SET ERRFLAG=Y
+	)
+) ELSE (
+	IF NOT "!PFLAG!" == "" SET ERRFLAG=Y
 )
 
 REM If TNS_ADMIN not set on command line or in environment get from registry
@@ -189,16 +217,16 @@ IF NOT "!AFLAG!" == "" (
 	awk "/^[A-Z0-1]* =/ { print $1 }" %TNS_ADMIN%\tnsnames.ora
 	EXIT /B 0
 )
-IF NOT "!KFLAG!" == "" (
-	IF NOT "!KKFLAG!" == "" (
-		SET ERRFLAG=Y
-	)
-)
-IF NOT "!CFLAG!" == "" (
-	IF NOT "!CCFLAG!" == "" (
-		SET ERRFLAG=Y
-	)
-)
+REM IF NOT "!KFLAG!" == "" (
+REM 	IF NOT "!KKFLAG!" == "" (
+REM 		SET ERRFLAG=Y
+REM 	)
+REM )
+REM IF NOT "!CFLAG!" == "" (
+REM 	IF NOT "!CCFLAG!" == "" (
+REM 		SET ERRFLAG=Y
+REM 	)
+REM )
 IF NOT "!WFLAG!" == "" (
 	IF "!JFLAG!" == "" (
 		SET ERRFLAG=Y
@@ -225,15 +253,17 @@ IF NOT "%JAVA_HOME%" == "" (
 	)
 )
 
-IF "%KRB5_CONFIG%" == "" (
-	REM set after SetJavaHome evaluation
-	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
-	REM %APPDATA%\krb5.conf is a fallback for MIT Kerberos5
-	REM SET KRB5_CONFIG=%APPDATA%\krb5.conf
-	IF NOT "!JAVA_HOME!" == "" (
-		IF EXIST !JAVA_HOME!\conf\security\krb5.conf SET KRB5_CONFIG=!JAVA_HOME!\conf\security\krb5.conf
-	) ELSE (
-		IF EXIST !SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
+IF "!LLFLAG!" == "" (
+	IF "%KRB5_CONFIG%" == "" (
+		REM set after SetJavaHome evaluation
+		REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
+		REM %APPDATA%\krb5.conf is a fallback for MIT Kerberos5
+		REM SET KRB5_CONFIG=%APPDATA%\krb5.conf
+		IF NOT "!JAVA_HOME!" == "" (
+			IF EXIST !JAVA_HOME!\conf\security\krb5.conf SET KRB5_CONFIG=!JAVA_HOME!\conf\security\krb5.conf
+		) ELSE (
+			IF EXIST !SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf SET KRB5_CONFIG=!SQLDEV_HOME!\jdk\jre\conf\security\krb5.conf
+		)
 	)
 )
 
@@ -243,13 +273,18 @@ IF NOT "!KRB5_CONFIG!" == "" (
 	)
 	SET SQLOPTS=!SQLOPTS! -krb5_config !KRB5_CONFIG!
 )
+
 IF NOT "!KRB5CCNAME!" == "" (
 	SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
 )
 
 IF NOT "!ERRFLAG!" == "" GOTO usage
 
-SET p=%~1
+IF NOT "!PFLAG!" == "" (
+		SET /p p="Enter TNS alias: "
+) ELSE (
+	SET p=%~1
+)
 SET alias=%p:*@=%
 
 IF NOT "!IFLAG!" == "" (
@@ -310,9 +345,11 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO [91mUsage[0m: [1mkrb_sql[0m [[93m-e[0m] [[93m-K[0m^|[93m-k[0m [33mkrb5_config[0m] [[93m-t[0m [33mtns_admin[0m] [[93m-i[0m] [[93m-j[0m[[93m-w[0m]] [[93m-J[0m [33mjava_home[0m] [[93m-x[0m] [33mtns_alias[0m>&2
+	ECHO [91mUsage[0m: [1mkrb_sql[0m [[93m-e[0m] [[93m-K[0m^|[93m-L[0m^|[93m-k[0m [33mkrb5_config[0m] [[93m-t[0m [33mtns_admin[0m] [[93m-i[0m] [[93m-j[0m[[93m-w[0m]] [[93m-J[0m [33mjava_home[0m] [[93m-x[0m] [93m-p[0m^|[33mtns_alias[0m>&2
+	IF NOT "!LLFLAG!" == "" SET KRB5_CONFIG=DNS
 	ECHO   [93m-k[0m [33mkrb5_config[0m   Specify [96mKRB5_CONFIG[0m (default: !_KRB5_CONFIG_SOURCE!!KRB5_CONFIG![0m^)>&2
-	ECHO   [93m-K[0m               Unset any default value of [96mKRB5_CONFIG[0m i.e. use DNS SRV lookup>&2
+	ECHO   [93m-K[0m               Unset any value of [96mKRB5_CONFIG[0m i.e. use [31minternal[0m default>&2
+	ECHO   [93m-L[0m               Unset any value of [96mKRB5_CONFIG[0m and [31minternal[0m default i.e. use [35mDNS SRV[0m lookup>&2
 	ECHO   [93m-t[0m [33mtns_admin[0m     Specify [96mTNS_ADMIN[0m (default: !_TNS_SOURCE!!TNS_ADMIN![0m^)>&2
 	ECHO                     if not in [96menvironment[0m try [36mregistry[0m>&2
 	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
@@ -328,6 +365,7 @@ EXIT /B 0
 		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
+	ECHO   [93m-p[0m               Prompt the user for [33mtns_alias[0m>&2
 
 	ECHO.>&2
 	ECHO [91mUsage[0m: [1mkrb_sql[0m [93m-a[0m [[93m-t [33mtns_admin[0m]>&2
@@ -342,13 +380,20 @@ EXIT /B 1
 	) do if "%~2" neq "" (set %~2=%%A) else echo(%%A
 EXIT /B
 
+REM jaasconfig: create JAAS Config using keytab and cache
 :jaasconfig
+	SET _KRB5CCNAME=!KRB5CCNAME!
+	SET _KRB5_KTNAME=!KRB5_KTNAME!
+	CALL :canon  _KRB5CCNAME
+	CALL :canon  _KRB5_KTNAME
 	ECHO Oracle { > !JAAS_CONFIG!
   	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
   	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
   	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
-  	ECHO   useKeyTab=false>> !JAAS_CONFIG!
-  	ECHO   useTicketCache=true >> !JAAS_CONFIG!
+  	ECHO   useTicketCache=true>> !JAAS_CONFIG!
+  	ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
+  	ECHO   useKeyTab=true>> !JAAS_CONFIG!
+  	ECHO   keyTab="FILE:!_KRB5_KTNAME!">> !JAAS_CONFIG!
   	REM It is less problematic to use KRB5CCNAME or -krb5ccname than specify ticketCache
   	REM ECHO   ticketCache=!KRB5CCNAME!>> !JAAS_CONFIG!
   	ECHO   storeKey=false>> !JAAS_CONFIG!
@@ -356,7 +401,6 @@ EXIT /B
   	ECHO   debug=!DEBUG!;>> !JAAS_CONFIG!
 	ECHO }; >> !JAAS_CONFIG!
 EXIT /B
-
 :regquery str
 	REM Retrieve value of str from HKLM\SOFTWARE\ORACLE
 	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (CALL set %~1=%%i%%)
@@ -378,13 +422,20 @@ EXIT /B 0
 	)
 EXIT /B 0
 
-REM retrieve a setting from a .properties file
+REM getprop: retrieve a setting from a .properties file
 :getprop str file
         FOR /F "tokens=1,2 delims=^=" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
 
 EXIT /B 0
 
-REM retrieve a setting from a .conf file
+REM getconf: retrieve a setting from a .conf file
 :getconf str file
 	FOR /F "tokens=1,2" %%i IN (%2) DO (IF %%i == %1 CALL SET %~1=%%j%%)
+EXIT /B 0
+
+REM canon: canonicalize path URLs for Java
+:canon str
+	FOR %%a IN ("\=/") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
 EXIT /B 0
