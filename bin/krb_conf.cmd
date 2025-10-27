@@ -1,6 +1,7 @@
 @ECHO off
-REM krb_pkinit: Get TGT from certificate
+REM krb_conf: genarate configuration files
 REM vim: fileformat=dos:
+REM https://docs.oracle.com/en/java/javase/22/docs/api/jdk.security.auth/com/sun/security/auth/module/Krb5LoginModule.html
 
 SETLOCAL enabledelayedexpansion
 
@@ -28,6 +29,8 @@ IF "%JAVA_HOME%" == "" (
 	SET _JAVA_HOME_SOURCE=[96m
 )
 
+REM JAAS configuration entry name
+SET NAME=Oracle
 SET SHORTCUT=sqldeveloper
 SET SHORTCUTSQL=sql
 SET ERRFLAG=
@@ -267,8 +270,14 @@ REM ECHO AddVMOption -Djava.security.krb5.kdc=!KDC!>> !SQLDEV_HOME!\sqldeveloper
 REM ECHO AddVMOption -Djava.security.auth.login.config=%HOMEPATH%/.java.login.config>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM  https://openjdk.org/jeps/486 - warnings for use of security manager become errors
 SET JAAS_CONFIG=%HOMEDRIVE%%HOMEPATH%\.java.login.config
-ECHO AddVMOption -Djava.security.auth.login.config=!JAAS_CONFIG!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
-ECHO AddVMOption -Doracle.net.KerberosJaasLoginModule=Oracle>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO # Default location for JAAS login configuration file is taken from:>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO #  !JAVA_HOME!/conf/security/java.security>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO # and is:>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO #  #login.config.url.1=file:${user.home}/.java.login.config>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO # so we do not need to specify:>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO # AddVMOption -Djava.security.auth.login.config=!JAAS_CONFIG!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO # However, we need to specify the module NAME in the config file that we create:>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
+ECHO AddVMOption -Doracle.net.KerberosJaasLoginModule=!NAME!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 IF !MAJOR! GTR 21 (
 	ECHO [92m!PROG![0m: disallowing security.manager in kerberos.conf version !MAJOR!
 	ECHO AddVMOption -Djava.security.manager=disallow>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf

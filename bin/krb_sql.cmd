@@ -42,6 +42,9 @@ IF "%KRB5CCNAME%" == "" (
 REM TODO: add -k krb5_ktname|-K options
 SET KRB5_KTNAME=!LOCALAPPDATA!\krb5_!USERNAME!.keytab
 
+REM JAAS configuration entry name
+SET NAME=Oracle
+
 IF "%JAAS_CONFIG%" == "" (
 	REM This is the default file used in <jre_home>\conf\security\java.security
 	SET JAAS_CONFIG=%HOMEDRIVE%%HOMEPATH%\.java.login.config
@@ -322,7 +325,7 @@ IF NOT "!WFLAG!" == "" (
 IF NOT "!JFLAG!" == "" (
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
 	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk
-	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=Oracle
+	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=!NAME!
 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 )
 IF NOT "!EFLAG!" == "" (
@@ -386,7 +389,7 @@ REM jaasconfig: create JAAS Config using keytab and cache
 	SET _KRB5_KTNAME=!KRB5_KTNAME!
 	CALL :canon  _KRB5CCNAME
 	CALL :canon  _KRB5_KTNAME
-	ECHO Oracle { > !JAAS_CONFIG!
+	ECHO !NAME! { > !JAAS_CONFIG!
   	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
   	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
   	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
