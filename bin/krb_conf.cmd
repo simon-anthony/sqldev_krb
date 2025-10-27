@@ -120,10 +120,12 @@ SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
 CALL :getconf SetJavaHome !CONF!
 
 IF "!JJFLAG!" == "" (
-	IF NOT "!SetJavaHome!" == "" (
-		REM Overrides all JAVA_HOME settings unless -J specified
-		SET JAVA_HOME=!SetJavaHome!
-		SET _JAVA_HOME_SOURCE=[32m
+	IF "!UFLAG!" == "" (
+		IF NOT "!SetJavaHome!" == "" (
+			REM Overrides all JAVA_HOME settings unless -J specified
+			SET JAVA_HOME=!SetJavaHome!
+			SET _JAVA_HOME_SOURCE=[32m
+		)
 	)
 )
 
@@ -205,13 +207,6 @@ IF NOT "!EFLAG!" == "" (
 SET BIN=%~dp0
 SET ETC=%bin:\bin=%etc
 
-IF EXIST !ETC!\krb5.conf (
-	ECHO [92m!PROG![0m: template krb5.conf copied to !KRB5_CONFIG!
-	COPY /V !ETC!\krb5.conf !KRB5_CONFIG!
-) ELSE (
-	ECHO [92m!PROG![0m: new krb5.conf created at !KRB5_CONFIG!
-	CALL :createkrb5conf
-)
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 	ECHO. >> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
@@ -332,6 +327,13 @@ IF NOT "!UFLAG!" == "" (
 ECHO [92m!PROG![0m: creating JAAS login configuration !JAAS_CONFIG!
 CALL :jaasconfig
 
+IF EXIST !ETC!\krb5.conf (
+	ECHO [92m!PROG![0m: template krb5.conf copied to !KRB5_CONFIG!
+	COPY /V !ETC!\krb5.conf !KRB5_CONFIG!
+) ELSE (
+	ECHO [92m!PROG![0m: new krb5.conf created at !KRB5_CONFIG!
+	CALL :createkrb5conf
+)
 ENDLOCAL
 EXIT /B 0
 
