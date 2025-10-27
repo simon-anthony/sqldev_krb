@@ -321,6 +321,8 @@ IF NOT "!UFLAG!" == "" (
 	ECHO [92m!PROG![0m: unsetting SetJavaHome in !CONF!
 	sed --in-place=.bak '/[^^#]* *SetJavaHome / { s@^^ *@# ^&@; }' "!CONF!"
 )
+ECHO [92m!PROG![0m: creating JAAS login configuration !JAAS_CONFIG!
+CALL :jaasconfig
 
 ENDLOCAL
 EXIT /B 0
@@ -457,4 +459,55 @@ REM versionpart: extract nth part of version number n.n.n - n default 1
 		SET _part=%3
 	)
 	FOR /F "tokens=%_part% delims=." %%i IN ("%1") DO (CALL set %~2=%%~i%%)
+EXIT /B 0
+
+REM jaasconfig: create JAAS Config using keytab and cache
+REM When multiple mechanisms to retrieve a ticket or key are provided, the preference order is:
+REM    1. ticket cache
+REM    2. keytab
+REM    3. shared state
+REM    4. user prompt
+REM MB JAAS defaults for cache and keytab differ from MIT
+:jaasconfig
+	SET _KRB5_KTNAME=!KRB5_KTNAME!
+	CALL :canon _KRB5_KTNAME
+	ECHO !NAME! { > !JAAS_CONFIG!
+  	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
+  	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
+  	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
+  	ECHO   useTicketCache=true>> !JAAS_CONFIG!
+  	REM There are many combinations of KRB5CCNAME or -krb5ccname and ticketCache
+	IF NOT "!KRB5CCNAME!" == "" (
+		REM If not specified default is {user.home}{file.separator}krb5cc_{user.name}
+		SET _KRB5CCNAME=!KRB5CCNAME!
+		CALL :canon _KRB5CCNAME
+		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
+	)
+  	ECHO   useKeyTab=true>> !JAAS_CONFIG!
+	REM If not specified default is {user.home}{file.separator}krb5.keytab
+  	ECHO   keyTab="FILE:!_KRB5_KTNAME!">> !JAAS_CONFIG!
+	REM Required to negotiate with KDC when requesting TGT
+	CALL :getuserprincipal PRINCIPAL
+	CALL :formatprincipal PRINCIPAL 
+  	REM ECHO   principal=!USERNAME!>> !JAAS_CONFIG!
+  	REM ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
+  	ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
+  	ECHO   storeKey=false>> !JAAS_CONFIG!
+  	ECHO   renewTGT=false>> !JAAS_CONFIG!
+  	ECHO   debug=!DEBUG!;>> !JAAS_CONFIG!
+	ECHO }; >> !JAAS_CONFIG!
+EXIT /B
+
+REM getuserprincipal: set user to userPrincipalName
+:getuserprincipal user
+	FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser %USERNAME% ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
+EXIT /B 0
+
+REM formatprincipal: format principal to standard Kerberos capitalization return value in var
+:formatprincipal principal
+	CALL SET _principal=%%%~1%%%
+	FOR /f "delims=@" %%i IN ("%_principal%") DO (set _primary=%%i)
+	FOR /f "tokens=2 delims=@" %%i IN ("%_principal%") DO (set _realm=%%i)
+	CALL :toupper _realm
+	CALL SET %~1=%%_primary%%@%%_realm%%
 EXIT /B 0
