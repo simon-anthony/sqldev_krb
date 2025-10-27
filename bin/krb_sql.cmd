@@ -314,6 +314,7 @@ IF NOT "!IFLAG!" == "" (
 	ECHO set sqlformat ansiconsole -config=!SQLPATH!\highlight.json>> !SQLPATH!\startup.sql
 	ECHO -- FORMAT RULES !SQLPATH!\formatter-rules.xml>> !SQLPATH!\startup.sql
 )
+
 IF NOT "!XFLAG!" == "" (
 	SET KRB5_TRACE=%TEMP%\krb5_trace.log
 	SET DEBUG=true

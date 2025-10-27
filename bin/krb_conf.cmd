@@ -189,6 +189,12 @@ IF "!UFLAG!" == "" (
 	)
 )
 
+IF NOT "!XFLAG!" == "" (
+	SET DEBUG=true
+) ELSE (
+	SET DEBUG=false
+)
+
 IF NOT "!ERRFLAG!" == "" GOTO usage
 
 IF NOT "!EFLAG!" == "" (
@@ -213,17 +219,19 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 	ECHO IncludeConfFile kerberos.conf>> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
 )
 
-REM Create startup script
+REM Create startup script - use JAAS
 
 ECHO|SET /p="[92m!PROG![0m: creating startup scripts: "
 
 ECHO|SET /p="krb_sqldeveloper.cmd "
 ECHO @ECHO OFF> !SQLDEV_HOME!\krb_sqldeveloper.cmd
-ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqldeveloper.log 2^>^&1 ^&^& !SQLDEV_HOME!\sqldeveloper.exe>> !SQLDEV_HOME!\krb_sqldeveloper.cmd
+REM ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqldeveloper.log 2^>^&1 ^&^& !SQLDEV_HOME!\sqldeveloper.exe>> !SQLDEV_HOME!\krb_sqldeveloper.cmd
+ECHO !SQLDEV_HOME!\sqldeveloper.exe ^> !SQLDEV_HOME!\krb_sqldeveloper.log 2^>^&1 >> !SQLDEV_HOME!\krb_sqldeveloper.cmd
 
 ECHO|SET /p="krb_sqlcl.cmd "
 ECHO @ECHO OFF> !SQLDEV_HOME!\krb_sqlcl.cmd
-ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqlcl.log 2^>^&1 ^&^& CALL %~dp0krb_sql.cmd -K -p>> !SQLDEV_HOME!\krb_sqlcl.cmd
+REM ECHO %~dp0krb_kinit -k ^> !SQLDEV_HOME!\krb_sqlcl.log 2^>^&1 ^&^& CALL %~dp0krb_sql.cmd -K -p>> !SQLDEV_HOME!\krb_sqlcl.cmd
+ECHO CALL %~dp0krb_sql.cmd -K -C -j -p>> !SQLDEV_HOME!\krb_sqlcl.cmd
 
 ECHO.
 
@@ -469,7 +477,7 @@ REM    3. shared state
 REM    4. user prompt
 REM MB JAAS defaults for cache and keytab differ from MIT
 :jaasconfig
-	SET _KRB5_KTNAME=!KRB5_KTNAME!
+	SET _KRB5_KTNAME=!KRB5_KTNAME:FILE:=!
 	CALL :canon _KRB5_KTNAME
 	ECHO !NAME! { > !JAAS_CONFIG!
   	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
@@ -479,7 +487,7 @@ REM MB JAAS defaults for cache and keytab differ from MIT
   	REM There are many combinations of KRB5CCNAME or -krb5ccname and ticketCache
 	IF NOT "!KRB5CCNAME!" == "" (
 		REM If not specified default is {user.home}{file.separator}krb5cc_{user.name}
-		SET _KRB5CCNAME=!KRB5CCNAME!
+		SET _KRB5CCNAME=!KRB5CCNAME:FILE:=!
 		CALL :canon _KRB5CCNAME
 		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
 	)
