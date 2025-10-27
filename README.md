@@ -13,7 +13,7 @@ Some enhanced functioanilty requires the installation of [Git for Windows](https
 
 The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build](#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11) the MIT Kerberos Windows installable package with PKINIT enabled.
 
-> **_NOTE:_**  These tools specifically discuss using Kerberos within JDBC or JAAS (the *thin client*) and not Kerebros with OCI (or the *thick client*) from the Oracle Client or Instantclient.
+> **_NOTE:_**  These tools specifically discuss using Kerberos within Java or by using JAAS (the *thin client* mechanisms) and not Kerebros with OCI (or the *thick client*) from the Oracle Client or Instantclient.
 
 The tools offer the possibility of simplified passwordless login to via Kerberos to databases and other services.
 
@@ -44,10 +44,12 @@ In this scenario the user authenticates to the realm (domain) and creates a *key
 
 These tools primarily make use of the JDK supplied with SQL Developer to afford login via the main GUI and its standalone SQL editor **SQLcl**.
 
-The Kerberos utilities provided by the JDK are minimalist in nature and have idiosyncratic behaviour. So, these programs make allowances for this to ensure a reliable process to authenticateL ikewise the Java authentication conventions for Kerberos do not all apply to SQL Developer and so other methods must be used.
+The Kerberos utilities provided by the JDK are minimalist in nature and have idiosyncratic behaviour. So, these programs make allowances for this to ensure a reliable process to authenticate. 
+
+> **_NOTE:_** SQL Developer itself uses JAAS. This greatly simpfies login as the need to maintain a credentials cache is obviated.
 
 
-#### JDK
+#### JDK - Supplied
 
 At the root of the SQL Developer installation, subsequently referred to as `SQLDEV_HOME` the shipped JDK is found:
 
@@ -70,6 +72,18 @@ jre\
 </code></pre>
 
 The three Kerberos utilities provided **kinit**, **klist** and **ktab** are to be found. These do have divergent operation from the MIT or Heimdal counterparts.
+
+#### JDK - External
+
+Using an external JDK is supported by SQL Developer. However, only versions up to 21.1 are supported:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/JDK-IDE-Support.png" />
+    </kbd>
+</p>
+
+The **krb_+conf** utility will make the appropriate checks when configuring SQL Developer to use an external JDK.
 
 ##### java.security
 
