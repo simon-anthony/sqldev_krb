@@ -82,6 +82,9 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-r" (
 	SHIFT
 	SET RFLAG=y
+) ELSE IF "%option%" == "-H" (
+	SHIFT
+	SET HHFLAG=y
 ) ELSE IF "%option%" == "-w" (
 	SHIFT
 	IF NOT "!UFLG!" == "" SET ERRFLAG=Y
@@ -111,6 +114,13 @@ IF "%SQLDEV_HOME%" == "" (
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
 	EXIT /B 1
+)
+IF NOT "!HHFLAG!" == "" (
+	IF "!HFLAG!" == "" (
+		SET ERRFLAG=Y
+	) ELSE (
+		SETX SQLDEV_HOME !SQLDEV_HOME! /M
+	)
 )
 
 SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
@@ -334,12 +344,14 @@ IF EXIST !ETC!\krb5.conf (
 	ECHO [92m!PROG![0m: new krb5.conf created at !KRB5_CONFIG!
 	CALL :createkrb5conf
 )
+
 ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m[0m] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m>&2
+	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m [[93m-H[0m]] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m>&2
 	ECHO   [93m-h[0m [33msqldev_home[0m   Specify SQL Developer home to override [96mSQLDEV_HOME[0m (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME![0m^)>&2
+	ECHO   [93m-H[0m               Set [33msqldev_home[0m in the system wide environment>&2
 	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
 	ECHO   [93m-p[0m               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences>&2
 	ECHO   [93m-r[0m               Resolve krb5.conf parameters>&2
@@ -374,12 +386,22 @@ REM createkrb5conf: generate krb5.con
 	ECHO.>> !KRB5_CONFIG!
 	ECHO [realms]>> !KRB5_CONFIG!
 	ECHO         !REALM! = {>> !KRB5_CONFIG!
-	ECHO             admin_server = win-bts6cdsef76.example.com>> !KRB5_CONFIG!
-	ECHO             kdc = win-bts6cdsef76.example.com>> !KRB5_CONFIG!
+	CALL :kdc KDCS
+
+	FOR /F "tokens=1" %%i IN ("!KDCS!") DO (
+		ECHO             admin_server = %%i>> !KRB5_CONFIG!
+       	)
+	FOR /F "delims= tokens=*" %%i IN ("!KDCS!") DO ( 
+		FOR %%j IN (%%i) DO (
+			ECHO             kdc = %%j>> !KRB5_CONFIG!
+		)
+	)
 	ECHO             kpasswd_protocol = SET_CHANGE>> !KRB5_CONFIG!
 	ECHO             # pkinit_anchors = DIR:/etc/certs/CA>> !KRB5_CONFIG!
 	ECHO             pkinit_eku_checking = kpServerAuth>> !KRB5_CONFIG!
-	ECHO             pkinit_kdc_hostname = win-bts6cdsef76.example.com>> !KRB5_CONFIG!
+	FOR /F "tokens=1" %%i IN ("!KDCS!") DO (
+		ECHO             pkinit_kdc_hostname = %%i>> !KRB5_CONFIG!
+	)
 	ECHO         }>> !KRB5_CONFIG!
 EXIT /B
 
@@ -520,4 +542,15 @@ REM formatprincipal: format principal to standard Kerberos capitalization return
 	FOR /f "tokens=2 delims=@" %%i IN ("%_principal%") DO (set _realm=%%i)
 	CALL :toupper _realm
 	CALL SET %~1=%%_primary%%@%%_realm%%
+EXIT /B 0
+
+REM kdc: get list of KDCs
+:kdc str
+	SET _file=%TEMP%\kdc%RANDOM%.out
+	CMD /V:ON /C "FOR /F %%i IN ('nslookup -type^=srv _kerberos._tcp.%USERDNSDOMAIN% ^| findstr internet') DO @(ECHO %%i)" | SORT /UNIQUE /O %_file%
+	set _a=
+	REM FOR /F "tokens=1" %%i IN (%_file%) DO (call SET _a=%%_a%% %%i%%)
+	FOR /F "tokens=1" %%i IN (%_file%) DO (call SET _a=%%i %%_a%%)
+	CALL SET %~1=%%_a%%
+	DEL %_file%
 EXIT /B 0
