@@ -13,6 +13,10 @@ REM domain in lower case
 SET DOMAIN=%USERDNSDOMAIN%
 CALL :toLower DOMAIN
 
+REM Note that %~dp0 will be C:\path\to\ and %~dpf0 will be C:\path\to\file.cmd
+SET BIN=%~dp0
+SET ETC=%BIN:\bin=%etc
+
 IF "%KRB5CCNAME%" == "" (
 	SET _KRB5CCNAME_SOURCE=[31m
 ) ELSE (
@@ -214,8 +218,6 @@ IF NOT "!EFLAG!" == "" (
 	EXIT /B 0
 )
 
-SET BIN=%~dp0
-SET ETC=%bin:\bin=%etc
 
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
