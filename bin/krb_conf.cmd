@@ -121,8 +121,11 @@ GOTO parse
 :endparse
 
 IF "%SQLDEV_HOME%" == "" (
-	ECHO [91m!PROG![0m: SQLDEV_HOME must be set in the environment or set with -h>&2
-	EXIT /B 1
+	REM ECHO [91m!PROG![0m: [96mSQLDEV_HOME[0m must be set in the environment or set with [93m-h[0m>&2
+	REM SET SQLDEV_HOME=[38;5;108mUNSET[0m
+	REM SET SQLDEV_HOME=[38;5;138mUNSET[0m browny
+	SET SQLDEV_HOME=[91mSQLDEV_HOME[0m
+	GOTO :usage
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
@@ -132,7 +135,15 @@ IF NOT "!HHFLAG!" == "" (
 	IF "!HFLAG!" == "" (
 		SET ERRFLAG=Y
 	) ELSE (
-		SETX SQLDEV_HOME !SQLDEV_HOME! /M
+		ECHO|SET /p="[92m!PROG![0m: creating SQLDEV_HOME in registry: "
+		SETX SQLDEV_HOME !SQLDEV_HOME! /M 2>&1 | FOR /F "tokens=1" %%i IN ('more') DO @(
+			IF NOT "%%i" == "ERROR:" (
+				ECHO HKEY_LOCAL_MACHINE
+			) ELSE (
+				SETX SQLDEV_HOME !SQLDEV_HOME! /M > NUL 2>&1
+				ECHO HKEY_CURRENT_USER
+			)
+		)
 	)
 )
 
@@ -369,7 +380,8 @@ EXIT /B 0
 :usage
 	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m [[93m-H[0m]] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m [[93m-t [33mfile[0m[0m] [[93m-V[0m][0m>&2
 	ECHO   [93m-h[0m [33msqldev_home[0m   Specify SQL Developer home to override [96mSQLDEV_HOME[0m (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME![0m^)>&2
-	ECHO   [93m-H[0m               Set [33msqldev_home[0m in the system wide environment>&2
+	ECHO   [93m-H[0m               Set [33msqldev_home[0m environment variable in the registry, first>&2
+	ECHO                     attempt HKEY_LOCAL_MACHINE and fallback to HKEY_CURRENT_USER>&2
 	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
 	ECHO   [93m-p[0m               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences>&2
 	ECHO   [93m-r[0m               Resolve krb5.conf parameters>&2
@@ -559,9 +571,20 @@ REM MB JAAS defaults for cache and keytab differ from MIT
 	ECHO }; >> !JAAS_CONFIG!
 EXIT /B
 
-REM getuserprincipal: set user to userPrincipalName
+REM getuserprincipal: set user to userPrincipalName (from AD or keytab)
 :getuserprincipal user
-	FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser %USERNAME% ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
+	powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command Get-AdUser %USERNAME%> NUL 2>&1
+	IF %ERRORLEVEL% EQU 0 (
+		REM get from AD
+		FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser %USERNAME% ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
+	) ELSE (
+		REM get from keytab
+		REM since this batch file has set KRB5_KTNAME we may have to expand the variables
+		SET _KTAB=!KRB5_KTNAME!
+		CALL :krb5exp _KTAB
+		FOR /F "usebackq tokens=4" %%i IN (`%BIN%\krb_klist -k !_KTAB! ^| find "[1] Service principal:"`) DO (CALL set %~1=%%i%%)
+		call echo get from keytab %%~1
+	)
 EXIT /B 0
 
 REM formatprincipal: format principal to standard Kerberos capitalization return value in var
