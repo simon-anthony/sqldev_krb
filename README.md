@@ -38,9 +38,7 @@ The first step is to generate the files required for configuration. This is done
     </kbd>
 </p>
 
-Exceuting will generate a basic configuration for the user:
-
-The first step is to generate the files required for configuration. This is done with **krb_conf**:
+Exceuting will generate a basic configuration for the user (it is assumed in this example that we have set `SQLDEV_HOME`):
 
 <p align="center" spacing="10">
     <kbd>
@@ -48,6 +46,15 @@ The first step is to generate the files required for configuration. This is done
     </kbd>
 </p>
 
+If we wish to configure an external JDK this can be done as follows:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_conf_java.PNG" />
+    </kbd>
+</p>
+
+Note that if you attempt to use a JDK > 21.1 a warning will be issued.
 
 ## Background
 
