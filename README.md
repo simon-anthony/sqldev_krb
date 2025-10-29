@@ -46,14 +46,7 @@ Exceuting will generate a basic configuration for the user (it is assumed in thi
     </kbd>
 </p>
 
-If we wish to configure an external JDK this can be done as follows:
-
-<p align="center" spacing="10">
-    <kbd>
-        <img src="media/krb_conf_java.PNG" />
-    </kbd>
-</p>
-
+If we wish to configure an external JDK this can be done with the **-J** flag.
 Note that if you attempt to use a JDK > 21.1 a warning will be issued.
 
 ## Background
