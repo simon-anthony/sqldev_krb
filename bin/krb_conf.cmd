@@ -138,7 +138,7 @@ IF "!JJFLAG!" == "" (
 		)
 	)
 )
-
+REM TODO - IF KRB5_CONFIG set in environment use it or allow to be overriden with -k (and -K)
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
 		ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
@@ -573,9 +573,9 @@ REM  %{COMMON_APPDATA}  (Windows) Application data for all users
 REM  %{LOCAL_APPDATA}   (Windows) Local application data for current user                              
 REM  If <jaasflag> is Y:
 REM  Replace %{username} with:
-REM  {user.name}        Java property - JAAS ${user.name} in a properties files
+REM  {user.name}        Java property - JAAS ${user.name} in properties files
 REM  Replace %HOMEDRIVE%%HOMEPATH% or %USERPROFILE% with:
-REM  {user.home}        Java property - JAAS ${user.home} in a properties files
+REM  {user.home}        Java property - JAAS ${user.home} in properties files
 REM 
 :krb5exp str jaasflag
 	CALL SET _str=%%%~1%%%
