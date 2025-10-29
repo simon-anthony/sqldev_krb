@@ -244,6 +244,13 @@ IF NOT "!TFLAG!" == "" (
 		EXIT /B 1
 	)
 	ECHO [92m!PROG![0m: saving !KRB5_CONFIG_TEMPLATE! as !ETC!\krb5.conf
+	IF NOT EXIST !ETC! (
+		MKDIR !ETC! >NUL 2>&1
+		IF %ERRORLEVEL% NEQ 0 (
+			ECHO [91m!PROG![0m: cannot create !ETC!>&2
+			EXIT /B 1
+		)
+	) 
 	COPY /Y !KRB5_CONFIG_TEMPLATE! !ETC!\krb5.conf
 )
 
