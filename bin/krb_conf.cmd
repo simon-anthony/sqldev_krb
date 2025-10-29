@@ -74,6 +74,15 @@ IF "%option%" == "-c" (
 		SET ERRFLAG=Y
 	)
 	SET JJFLAG=Y
+) ELSE IF "%option%" == "-t" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET KRB5_CONFIG_TEMPLATE=%arg%
+		SHIFT
+	) ELSE (
+		SET ERRFLAG=Y
+	)
+	SET TFLAG=Y
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
 	SET EFLAG=Y
@@ -218,7 +227,14 @@ IF NOT "!EFLAG!" == "" (
 	EXIT /B 0
 )
 
-
+IF NOT "!TFLAG!" == "" (
+	IF NOT EXIST !KRB5_CONFIG_TEMPLATE! (
+		ECHO [91m!PROG![0m: cannot open !KRB5_CONFIG_TEMPLATE!>&2
+		EXIT /B 1
+	)
+	ECHO [92m!PROG![0m: saving !KRB5_CONFIG_TEMPLATE! as !ETC!\krb5.conf
+	COPY /Y !KRB5_CONFIG_TEMPLATE! !ETC!\krb5.conf
+)
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 	ECHO. >> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
@@ -351,7 +367,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m [[93m-H[0m]] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m>&2
+	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m [[93m-H[0m]] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m [[93m-t [33mfile[0m[0m] [[93m-V[0m][0m>&2
 	ECHO   [93m-h[0m [33msqldev_home[0m   Specify SQL Developer home to override [96mSQLDEV_HOME[0m (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME![0m^)>&2
 	ECHO   [93m-H[0m               Set [33msqldev_home[0m in the system wide environment>&2
 	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
@@ -367,6 +383,7 @@ EXIT /B 0
 	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
 	ECHO   [93m-w[0m               Write value of [33mjava_home[0m to [032mproduct.conf[0m>&2
 	ECHO   [93m-u[0m               Unset [33mjava_home[0m in [32mproduct.conf[0m>&2
+	ECHO   [93m-t[0m [33mfile[0m          Install and use [33mfile[0m as a template krb5.conf>&2
 	ECHO   [93m-V[0m               Print Java version and exit
 ENDLOCAL
 EXIT /B 1

@@ -146,7 +146,7 @@ IF "%option%" == "-k" (
 	IF NOT "!TFLAG!" == "" (
 		GOTO endparse
 	)
-	IF NOT "!PFLAG!" == "" SET ERRFLAG=y
+	IF NOT "!PFLAG!" == "" SET ERRFLAG=Y
 	SET AFLAG=Y
 ) ELSE IF "%option%" == "-x" (
 	SHIFT
