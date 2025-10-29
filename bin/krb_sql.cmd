@@ -32,7 +32,7 @@ IF "%KRB5_CONFIG%" == "" (
 )
 
 IF "%KRB5CCNAME%" == "" (
-	REM This is the default cache unles overridden by specifying KRB5CCNAME
+	REM This is the default cache unless overridden by specifying KRB5CCNAME
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
 	SET _KRB5CCNAME_SOURCE=[31m
 ) ELSE (

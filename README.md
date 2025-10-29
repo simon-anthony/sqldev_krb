@@ -13,7 +13,7 @@ Some enhanced functioanilty requires the installation of [Git for Windows](https
 
 The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build](#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11) the MIT Kerberos Windows installable package with PKINIT enabled.
 
-> **_NOTE:_**  These tools specifically discuss using Kerberos within Java or by using JAAS (the *thin client* mechanisms) and not Kerebros with OCI (or the *thick client*) from the Oracle Client or Instantclient.
+> **_NOTE:_**  These tools specifically discuss using Kerberos within Java (GSS-API or JAAS) with SQL Developer and SQLcl (*thin client*s) and not Kerberos with OCI (*thick client*) from the Oracle Client or Instantclient.
 
 The tools offer the possibility of simplified passwordless login to via Kerberos to databases and other services.
 
@@ -47,6 +47,12 @@ In this scenario the user authenticates to the realm (domain) and creates a *key
 ### SQL Developer
 
 These tools primarily make use of the JDK supplied with SQL Developer to afford login via the main GUI and its standalone SQL editor **SQLcl**.
+
+SQL Developer's connection facilties for Kerberos are roughly outlined in section [2.20.5](https://docs.oracle.com/en/database/oracle/sql-developer/24.3/rptug/sql-developer-concepts-usage.html#GUID-F7C2BC27-20FB-4F0B-AB66-A104DB3F0090) of the User Guide:
+
+**Kerberos Thin Config: Config File:** Kerberos configuration file (for example, krb5.conf). If this is not specified, default locations will be tried for your Java and system configuration.
+
+**Kerberos Thin Config: Credential Cache File:** Kerberos credential cache file (for example, krb5_cc_cache). If this is not specified, a cache will not be used, and a principal name and password will be required each time.
 
 The Kerberos utilities provided by the JDK are minimalist in nature and have idiosyncratic behaviour. So, these programs make allowances for this to ensure a reliable process to authenticate. 
 

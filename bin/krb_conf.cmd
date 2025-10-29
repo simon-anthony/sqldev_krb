@@ -49,7 +49,7 @@ IF "%option%" == "-c" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
-	SET CFLAG=y
+	SET CFLAG=Y
 ) ELSE IF "%option%" == "-h" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
@@ -59,7 +59,7 @@ IF "%option%" == "-c" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
-	SET HFLAG=y
+	SET HFLAG=Y
 ) ELSE IF "%option%" == "-J" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
@@ -69,36 +69,36 @@ IF "%option%" == "-c" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
-	SET JJFLAG=y
+	SET JJFLAG=Y
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
-	SET EFLAG=y
+	SET EFLAG=Y
 ) ELSE IF "%option%" == "-p" (
 	SHIFT
-	SET PFLAG=y
+	SET PFLAG=Y
 ) ELSE IF "%option%" == "-v" (
 	SHIFT
-	SET VFLAG=y
+	SET VFLAG=Y
 ) ELSE IF "%option%" == "-r" (
 	SHIFT
-	SET RFLAG=y
+	SET RFLAG=Y
 ) ELSE IF "%option%" == "-H" (
 	SHIFT
-	SET HHFLAG=y
+	SET HHFLAG=Y
 ) ELSE IF "%option%" == "-w" (
 	SHIFT
 	IF NOT "!UFLG!" == "" SET ERRFLAG=Y
-	SET WFLAG=y
+	SET WFLAG=Y
 ) ELSE IF "%option%" == "-u" (
 	SHIFT
 	IF NOT "!WFLG!" == "" SET ERRFLAG=Y
-	SET UFLAG=y
+	SET UFLAG=Y
 ) ELSE IF "%option%" == "-E" (
 	SHIFT
-	SET EEFLAG=y
+	SET EEFLAG=Y
 ) ELSE IF "%option%" == "-V" (
 	SHIFT
-	SET VVFLAG=y
+	SET VVFLAG=Y
 ) ELSE (
 	SET ERRFLAG=Y
 	GOTO endparse
@@ -161,17 +161,17 @@ IF NOT "!VFLAG!" == "" (
 )
 IF "%CFLAG%" == "" (
 	REM This is the default cache unless overridden by specifying KRB5CCNAME
-	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
+	REM JDK kinit uses %USERPROFILE%\krb5cc_%USERNAME%
 	REM SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
 	IF NOT "%PFLAG%" == "" (
-		SET KRB5CCNAME=FILE:!LOCALAPPDATA!\krb5cc_!USERNAME!
-		SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
+		IF "!KRB5CCNAME!" == "" SET KRB5CCNAME=FILE:!LOCALAPPDATA!\krb5cc_!USERNAME!
+		IF "!KRB5_KTNAME!" == "" SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
 	) ELSE IF NOT "!RFLAG!" == "" (
-		SET KRB5CCNAME=FILE:%%{LOCAL_APPDATA}\krb5cc_%%{username}
-		SET KRB5_KTNAME=FILE:%%{LOCAL_APPDATA}\krb5_%%{username}.keytab
+		IF "!KRB5CCNAME!" == "" SET KRB5CCNAME=FILE:!LOCALAPPDATA!\krb5cc_!USERNAME!
+		IF "!KRB5_KTNAME!" == "" SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
 	) ELSE (
-		SET KRB5CCNAME=FILE:!LOCALAPPDATA!\krb5cc_!USERNAME!
-		SET KRB5_KTNAME=FILE:!LOCALAPPDATA!\krb5_!USERNAME!.keytab
+		IF "!KRB5CCNAME!" == "" SET KRB5CCNAME=FILE:%%{LOCAL_APPDATA}/krb5cc_%%{username}
+		IF "!KRB5_KTNAME!" == "" SET KRB5_KTNAME=FILE:%%{LOCAL_APPDATA}/krb5_%%{username}.keytab
 	)
 )
 
@@ -277,12 +277,12 @@ ECHO AddVMOption -Dsun.security.krb5.debug=true> !SQLDEV_HOME!\sqldeveloper\bin\
 REM Moot. SQL Developer looks for this anyway:
 REM ECHO AddVMOption -Djava.security.krb5.conf=../../jdk/jre/conf/security/krb5.conf>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 ECHO AddVMOption -Djava.security.krb5.conf=!KRB5_CONFIG!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
-REM Usually these work - but SQL Developer loads too late in startup to have an effect:
+REM SQL Developer uses JAAS
 REM ECHO AddVMOption -Djava.security.krb5.realm=!REALM!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.krb5.kdc=!KDC!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM ECHO AddVMOption -Djava.security.auth.login.config=%HOMEPATH%/.java.login.config>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM  https://openjdk.org/jeps/486 - warnings for use of security manager become errors
-SET JAAS_CONFIG=%HOMEDRIVE%%HOMEPATH%\.java.login.config
+SET JAAS_CONFIG=%USERPROFILE%\.java.login.config
 ECHO # Default location for JAAS login configuration file is taken from:>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 ECHO #  !JAVA_HOME!/conf/security/java.security>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 ECHO # and is:>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
@@ -502,6 +502,11 @@ REM    4. user prompt
 REM MB JAAS defaults for cache and keytab differ from MIT
 :jaasconfig
 	SET _KRB5_KTNAME=!KRB5_KTNAME:FILE:=!
+	IF NOT "!RFLAG!" == "" (
+		CALL :krb5exp _KRB5_KTNAME
+	) ELSE (
+		CALL :krb5exp _KRB5_KTNAME JAAS 
+	)
 	CALL :canon _KRB5_KTNAME
 	ECHO !NAME! { > !JAAS_CONFIG!
   	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
@@ -512,6 +517,11 @@ REM MB JAAS defaults for cache and keytab differ from MIT
 	IF NOT "!KRB5CCNAME!" == "" (
 		REM If not specified default is {user.home}{file.separator}krb5cc_{user.name}
 		SET _KRB5CCNAME=!KRB5CCNAME:FILE:=!
+		IF NOT "!RFLAG!" == "" (
+			CALL :krb5exp _KRB5CCNAME 
+		) ELSE (
+			CALL :krb5exp _KRB5CCNAME JAAS
+		)
 		CALL :canon _KRB5CCNAME
 		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
 	)
@@ -549,8 +559,44 @@ REM kdc: get list of KDCs
 	SET _file=%TEMP%\kdc%RANDOM%.out
 	CMD /V:ON /C "FOR /F %%i IN ('nslookup -type^=srv _kerberos._tcp.%USERDNSDOMAIN% ^| findstr internet') DO @(ECHO %%i)" | SORT /UNIQUE /O %_file%
 	set _a=
-	REM FOR /F "tokens=1" %%i IN (%_file%) DO (call SET _a=%%_a%% %%i%%)
 	FOR /F "tokens=1" %%i IN (%_file%) DO (call SET _a=%%i %%_a%%)
 	CALL SET %~1=%%_a%%
 	DEL %_file%
+EXIT /B 0
+
+REM krb5exp: kerberos parameter expansion of <str>
+REM  %{TEMP}            Temporary directory                       
+REM  %{uid}             Unix real UID or Windows SID              
+REM  %{username}        (Unix) Username of effective user ID      
+REM  %{APPDATA}         (Windows) Roaming application data for current user                              
+REM  %{COMMON_APPDATA}  (Windows) Application data for all users  
+REM  %{LOCAL_APPDATA}   (Windows) Local application data for current user                              
+REM  If <jaasflag> is Y:
+REM  Replace %{username} with:
+REM  {user.name}        Java property - JAAS ${user.name} in a properties files
+REM  Replace %HOMEDRIVE%%HOMEPATH% or %USERPROFILE% with:
+REM  {user.home}        Java property - JAAS ${user.home} in a properties files
+REM 
+:krb5exp str jaasflag
+	CALL SET _str=%%%~1%%%
+
+	SET _up=%USERPROFILE%
+	CALL :canon _up
+
+	IF "%~2" == "JAAS" (
+		SET _str=!_str:%%{username}=${user.name}!
+	)
+
+	SET _str=!_str:%%{username}=%USERNAME%!
+	SET _str=!_str:%%{LOCAL_APPDATA}=%LOCALAPPDATA%!
+	SET _str=!_str:%%{APPDATA}=%APPDATA%!
+
+	IF "%~2" == "JAAS" (
+		SET _str=!_str:%%HOMEDRIVE%%%%HOMEPATH%%=${user.home}!
+		SET _str=!_str:%%USERPROFILE%%=${user.home}!
+		SET _str=!_str:%USERPROFILE%=${user.home}!
+		SET _str=!_str:%_up%=${user.home}!
+	)
+
+	CALL SET %~1=%%_str%%
 EXIT /B 0
