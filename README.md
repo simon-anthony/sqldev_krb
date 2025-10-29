@@ -30,6 +30,13 @@ If the _userPrincipalName_ differs from the _sAMAccountName_ within Active Direc
 
 ## Quick Start
 
+The first step is to generate the files required for configuration.
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_conf.PNG" />
+    </kbd>
+</p>
 
 ## Background
 
@@ -314,14 +321,15 @@ In common with the other programs in this package, type the [help](#krb_sql) opt
 
 ### krb_conf
 ```text
-Usage: krb_conf [-h sqldev_home] [-c krb5ccname] [-J java_home [-w]]|-u] [-p] [-r] [-E]
+Usage: krb_conf [-h sqldev_home [-H]] [-c krb5ccname] [-J java_home [-w]]|-u] [-p] [-r] [-E]
   -h sqldev_home   Specify SQL Developer home to override SQLDEV_HOME (default: C:\Oracle\sqldeveloper)
-  -c krb5ccname    Specify KRB5CCNAME (default: FILE:C:\Users\demo\AppData\Local\krb5cc_demo)
+  -H               Set sqldev_home in the system wide environment
+  -c krb5ccname    Specify KRB5CCNAME (default: FILE:%{LOCAL_APPDATA}/krb5cc_%{username})
   -p               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences
   -r               Resolve krb5.conf parameters
   -v               Print SQL Developer version and exit
   -E               Escape rather than canonicalize paths for preferences files
-  -J java_home     Specify JAVA_HOME (default: C:\Oracle\jdk-21.0.9) if unset
+  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   -w               Write value of java_home to product.conf
   -u               Unset java_home in product.conf
@@ -418,7 +426,7 @@ Usage: krb_sql [-e] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-j[-w]] [-J java
                     another login file (default: C:\Users\demo\.java.login.config)
   -w               Overwrite JAAS configuration with internal defaults
   -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -J java_home     Specify JAVA_HOME (default: C:\Oracle\jdk-21.0.9) if unset
+  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   -p               Prompt the user for tns_alias
 
