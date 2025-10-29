@@ -30,13 +30,24 @@ If the _userPrincipalName_ differs from the _sAMAccountName_ within Active Direc
 
 ## Quick Start
 
-The first step is to generate the files required for configuration.
+The first step is to generate the files required for configuration. This is done with **krb_conf**:
 
 <p align="center" spacing="10">
     <kbd>
         <img src="media/krb_conf.PNG" />
     </kbd>
 </p>
+
+Exceuting will generate a basic configuration for the user:
+
+The first step is to generate the files required for configuration. This is done with **krb_conf**:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_conf_executed.PNG" />
+    </kbd>
+</p>
+
 
 ## Background
 
