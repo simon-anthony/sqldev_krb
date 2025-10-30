@@ -10,10 +10,13 @@ SET PRINCIPAL=
 
 IF "%SQLDEV_HOME%" == "" (
 	ECHO [91m!PROG![0m: [96mSQLDEV_HOME[0m must be set in the environment>&2
+	SET SQLDEV_HOME=[91mSQLDEV_HOME[0m
+	IF "%~1" == "-?"  GOTO :usage
 	EXIT /B 1
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	ECHO [91m!PROG![0m: invalid SQL Developer home !SQLDEV_HOME!>&2
+	IF "%~1" == "-?"  GOTO :usage
 	EXIT /B 1
 )
 
