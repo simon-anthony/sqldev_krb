@@ -409,48 +409,6 @@ EXIT /B 1
 	) do if "%~2" neq "" (set %~2=%%A) else echo(%%A
 EXIT /B
 
-REM jaasconfig: create JAAS Config using keytab and cache
-REM When multiple mechanisms to retrieve a ticket or key are provided, the preference order is:
-REM    1. ticket cache
-REM    2. keytab
-REM    3. shared state
-REM    4. user prompt
-REM MB JAAS defaults for cache and keytab differ from MIT
-:jaasconfig
-	SET _KRB5_KTNAME=!KRB5_KTNAME!
-	CALL :canon  _KRB5_KTNAME
-	ECHO !NAME! { > !JAAS_CONFIG!
-  	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
-  	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
-  	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
-  	ECHO   useTicketCache=true>> !JAAS_CONFIG!
-  	REM There are many combinations of KRB5CCNAME or -krb5ccname and ticketCache
-	IF NOT "!KRB5CCNAME!" == "" (
-		REM If not specified default is {user.home}{file.separator}krb5cc_{user.name}
-		SET _KRB5CCNAME=!KRB5CCNAME!
-		CALL :canon  _KRB5CCNAME
-		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
-	)
-  	ECHO   useKeyTab=true>> !JAAS_CONFIG!
-	REM If not specified default is {user.home}{file.separator}krb5.keytab
-  	ECHO   keyTab="FILE:!_KRB5_KTNAME!">> !JAAS_CONFIG!
-	REM Required to negotiate with KDC when requesting TGT
-	CALL :getuserprincipal PRINCIPAL
-	CALL :formatprincipal PRINCIPAL 
-  	REM ECHO   principal=!USERNAME!>> !JAAS_CONFIG!
-  	REM ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
-  	ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
-  	ECHO   storeKey=false>> !JAAS_CONFIG!
-  	ECHO   renewTGT=false>> !JAAS_CONFIG!
-  	ECHO   debug=!DEBUG!;>> !JAAS_CONFIG!
-	ECHO }; >> !JAAS_CONFIG!
-EXIT /B
-
-REM regquery: retrieve value of str from HKLM\SOFTWARE\ORACLE
-:regquery str
-	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (CALL set %~1=%%i%%)
-EXIT /B 0
-
 REM toUpper: make str uppercase
 :toUpper str
 	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
@@ -487,9 +445,66 @@ REM canon: canonicalize path URLs for Java
 	)
 EXIT /B 0
 
-REM getuserprincipal: set user to userPrincipalName
+REM jaasconfig: create JAAS Config using keytab and cache
+REM When multiple mechanisms to retrieve a ticket or key are provided, the preference order is:
+REM    1. ticket cache
+REM    2. keytab
+REM    3. shared state
+REM    4. user prompt
+REM MB JAAS defaults for cache and keytab differ from MIT
+:jaasconfig
+	SET _KRB5_KTNAME=!KRB5_KTNAME:FILE:=!
+	IF NOT "!RFLAG!" == "" (
+		CALL :krb5exp _KRB5_KTNAME
+	) ELSE (
+		CALL :krb5exp _KRB5_KTNAME JAAS 
+	)
+	CALL :canon _KRB5_KTNAME
+	ECHO !NAME! { > !JAAS_CONFIG!
+  	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
+  	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
+  	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
+  	ECHO   useTicketCache=true>> !JAAS_CONFIG!
+  	REM There are many combinations of KRB5CCNAME or -krb5ccname and ticketCache
+	IF NOT "!KRB5CCNAME!" == "" (
+		REM If not specified default is {user.home}{file.separator}krb5cc_{user.name}
+		SET _KRB5CCNAME=!KRB5CCNAME:FILE:=!
+		IF NOT "!RFLAG!" == "" (
+			CALL :krb5exp _KRB5CCNAME 
+		) ELSE (
+			CALL :krb5exp _KRB5CCNAME JAAS
+		)
+		CALL :canon _KRB5CCNAME
+		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
+	)
+  	ECHO   useKeyTab=true>> !JAAS_CONFIG!
+	REM If not specified default is {user.home}{file.separator}krb5.keytab
+  	ECHO   keyTab="FILE:!_KRB5_KTNAME!">> !JAAS_CONFIG!
+	REM Required to negotiate with KDC when requesting TGT
+	CALL :getuserprincipal PRINCIPAL
+	CALL :formatprincipal PRINCIPAL 
+  	REM ECHO   principal=!USERNAME!>> !JAAS_CONFIG!
+  	REM ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
+  	ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
+  	ECHO   storeKey=false>> !JAAS_CONFIG!
+  	ECHO   renewTGT=false>> !JAAS_CONFIG!
+  	ECHO   debug=!DEBUG!;>> !JAAS_CONFIG!
+	ECHO }; >> !JAAS_CONFIG!
+EXIT /B
+
+REM getuserprincipal: set user to userPrincipalName (from AD or keytab)
 :getuserprincipal user
-	FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser %USERNAME% ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
+	powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command Get-AdUser %USERNAME%> NUL 2>&1
+	IF %ERRORLEVEL% EQU 0 (
+		REM get from AD
+		FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser %USERNAME% ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
+	) ELSE (
+		REM get from keytab
+		REM since this batch file has set KRB5_KTNAME we may have to expand the variables
+		SET _KTAB=!KRB5_KTNAME!
+		CALL :krb5exp _KTAB
+		FOR /F "usebackq tokens=4" %%i IN (`%BIN%\krb_klist -k !_KTAB! ^| find "[1] Service principal:"`) DO (CALL set %~1=%%i%%)
+	)
 EXIT /B 0
 
 REM formatprincipal: format principal to standard Kerberos capitalization return value in var
@@ -499,4 +514,41 @@ REM formatprincipal: format principal to standard Kerberos capitalization return
 	FOR /f "tokens=2 delims=@" %%i IN ("%_principal%") DO (set _realm=%%i)
 	CALL :toupper _realm
 	CALL SET %~1=%%_primary%%@%%_realm%%
+EXIT /B 0
+
+REM krb5exp: kerberos parameter expansion of <str>
+REM  %{TEMP}            Temporary directory                       
+REM  %{uid}             Unix real UID or Windows SID              
+REM  %{username}        (Unix) Username of effective user ID      
+REM  %{APPDATA}         (Windows) Roaming application data for current user                              
+REM  %{COMMON_APPDATA}  (Windows) Application data for all users  
+REM  %{LOCAL_APPDATA}   (Windows) Local application data for current user                              
+REM  If <jaasflag> is Y:
+REM  Replace %{username} with:
+REM  {user.name}        Java property - JAAS ${user.name} in properties files
+REM  Replace %HOMEDRIVE%%HOMEPATH% or %USERPROFILE% with:
+REM  {user.home}        Java property - JAAS ${user.home} in properties files
+REM 
+:krb5exp str jaasflag
+	CALL SET _str=%%%~1%%%
+
+	SET _up=%USERPROFILE%
+	CALL :canon _up
+
+	IF "%~2" == "JAAS" (
+		SET _str=!_str:%%{username}=${user.name}!
+	)
+
+	SET _str=!_str:%%{username}=%USERNAME%!
+	SET _str=!_str:%%{LOCAL_APPDATA}=%LOCALAPPDATA%!
+	SET _str=!_str:%%{APPDATA}=%APPDATA%!
+
+	IF "%~2" == "JAAS" (
+		SET _str=!_str:%%HOMEDRIVE%%%%HOMEPATH%%=${user.home}!
+		SET _str=!_str:%%USERPROFILE%%=${user.home}!
+		SET _str=!_str:%USERPROFILE%=${user.home}!
+		SET _str=!_str:%_up%=${user.home}!
+	)
+
+	CALL SET %~1=%%_str%%
 EXIT /B 0
