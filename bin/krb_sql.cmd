@@ -219,7 +219,7 @@ IF NOT "!TNS_ADMIN!" == "" (
 
 IF NOT "!AFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\awk.exe" (
-		ECHO !_C_ERR!!PROG!!_C_OFF!: Install Git for Windows to use this option>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: install Git for Windows to use the -a option>&2
 		exit /B 1
 	)
 	IF "!TNS_ADMIN!" == "" (

@@ -6,19 +6,11 @@ SETLOCAL enabledelayedexpansion
 
 SET PROG=krb_klist
 
-REM COLOURS
-SET _C_INT=[38;5;214m
-SET _C_ENV=[96m
-SET _C_ERR=[91m
-SET _C_MSG=[92m
-SET _C_DNS=[35m
-SET _C_ARG=[93m
-SET _C_OPT=[33m
-SET _C_CFG=[32m
-SET _C_JAA=[38;5;115m
-SET _C_REG=[36m
-SET _C_OFF=[0m
-SET _C_BLD=[0m
+REM Note that %~dp0 will be C:\path\to\ and %~dpf0 will be C:\path\to\file.cmd
+SET BIN=%~dp0
+SET ETC=%BIN:\bin=%etc
+
+CALL %BIN%\COLOURS.CMD
 
 SET REALM=%USERDNSDOMAIN%
 
