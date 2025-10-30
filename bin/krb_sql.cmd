@@ -6,21 +6,13 @@ SETLOCAL enabledelayedexpansion
 
 SET PROG=krb_sql
 
-SET ORACLE_HOME=
+REM Note that %~dp0 will be C:\path\to\ and %~dpf0 will be C:\path\to\file.cmd
+SET BIN=%~dp0
+SET ETC=%BIN:\bin=%etc
 
-REM COLOURS
-SET _C_INT=[38;5;214m
-SET _C_ENV=[96m
-SET _C_ERR=[91m
-SET _C_MSG=[92m
-SET _C_DNS=[35m
-SET _C_ARG=[93m
-SET _C_OPT=[33m
-SET _C_CFG=[32m
-SET _C_JAA=[38;5;115m
-SET _C_REG=[36m
-SET _C_OFF=[0m
-SET _C_BLD=[0m
+CALL %BIN%\COLOURS.CMD
+
+SET ORACLE_HOME=
 
 SET _TNS_SOURCE=!_C_ENV!
 SET SQLOPTS=-kerberos -thin -noupdates
@@ -62,6 +54,12 @@ IF "%JAVA_HOME%" == "" (
 	SET _JAVA_HOME_SOURCE=!_C_INT!
 ) ELSE (
 	SET _JAVA_HOME_SOURCE=!_C_ENV!
+)
+
+REM If TNS_ADMIN not in environment get from registry, may be overridden later by command line
+IF "!TNS_ADMIN!" == "" (
+	CALL :regquery TNS_ADMIN
+	SET _TNS_SOURCE=!_C_REG!
 )
 
 IF "%SQLDEV_HOME%" == "" (
@@ -205,12 +203,6 @@ IF "%1" == "" (
 	)
 ) ELSE (
 	IF NOT "!PFLAG!" == "" SET ERRFLAG=Y
-)
-
-REM If TNS_ADMIN not set on command line or in environment get from registry
-IF "!TNS_ADMIN!" == "" (
-	CALL :regquery TNS_ADMIN
-	SET _TNS_SOURCE=!_C_REG!
 )
 
 IF NOT "!TNS_ADMIN!" == "" (
