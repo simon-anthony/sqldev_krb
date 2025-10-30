@@ -128,7 +128,7 @@ IF "%SQLDEV_HOME%" == "" (
 	GOTO :usage
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
+	ECHO [91m!PROG![0m: invalid SQL Developer home>&2
 	EXIT /B 1
 )
 IF NOT "!HHFLAG!" == "" (
@@ -165,7 +165,7 @@ IF "!JJFLAG!" == "" (
 REM TODO - IF KRB5_CONFIG set in environment use it or allow to be overriden with -k (and -K)
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO [91m!PROG![0m: invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_CONFIG=%JAVA_HOME%\conf\security\krb5.conf
@@ -590,7 +590,6 @@ REM getuserprincipal: set user to userPrincipalName (from AD or keytab)
 		SET _KTAB=!KRB5_KTNAME!
 		CALL :krb5exp _KTAB
 		FOR /F "usebackq tokens=4" %%i IN (`%BIN%\krb_klist -k !_KTAB! ^| find "[1] Service principal:"`) DO (CALL set %~1=%%i%%)
-		call echo get from keytab %%~1
 	)
 EXIT /B 0
 

@@ -11,7 +11,7 @@ IF "%SQLDEV_HOME%" == "" (
 	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO [91m!PROG![0m: Invalid SQL Developer home
+	ECHO [91m!PROG![0m: invalid SQL Developer home
 	EXIT /B 1
 )
 

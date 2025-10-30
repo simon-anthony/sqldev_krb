@@ -154,7 +154,7 @@ IF NOT "!KFLAG!" == "" (
 )
 IF "!MMFLAG!" == "" (
 	IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-		ECHO [91m!PROG![0m: Invalid SQL Developer home>&2
+		ECHO [91m!PROG![0m: invalid SQL Developer home>&2
 		EXIT /B 1
 	)
 	SET KRB5_BIN=!SQLDEV_HOME!\jdk\jre\bin
@@ -208,7 +208,7 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO [91m!PROG![0m: Invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO [91m!PROG![0m: invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 		SET ERRFLAG=Y
 	)
