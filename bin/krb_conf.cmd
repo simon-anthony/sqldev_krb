@@ -13,24 +13,38 @@ REM domain in lower case
 SET DOMAIN=%USERDNSDOMAIN%
 CALL :toLower DOMAIN
 
+REM COLOURS
+SET _C_INT=[38;5;214m
+SET _C_ENV=[96m
+SET _C_ERR=[91m
+SET _C_MSG=[92m
+SET _C_DNS=[35m
+SET _C_ARG=[93m
+SET _C_OPT=[33m
+SET _C_CFG=[32m
+SET _C_JAA=[38;5;115m
+SET _C_REG=[36m
+SET _C_OFF=[0m
+SET _C_BLD=[0m
+
 REM Note that %~dp0 will be C:\path\to\ and %~dpf0 will be C:\path\to\file.cmd
 SET BIN=%~dp0
 SET ETC=%BIN:\bin=%etc
 
 IF "%KRB5CCNAME%" == "" (
-	SET _KRB5CCNAME_SOURCE=[31m
+	SET _KRB5CCNAME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _KRB5CCNAME_SOURCE=[96m
+	SET _KRB5CCNAME_SOURCE=!_C_ENV!
 )
 
 IF NOT "%SQLDEV_HOME%" == "" (
-	SET _SQLDEV_HOME_SOURCE=[96m
+	SET _SQLDEV_HOME_SOURCE=!_C_ENV!
 ) 
 
 IF "%JAVA_HOME%" == "" (
-	SET _JAVA_HOME_SOURCE=[31m
+	SET _JAVA_HOME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _JAVA_HOME_SOURCE=[96m
+	SET _JAVA_HOME_SOURCE=!_C_ENV!
 )
 
 REM JAAS configuration entry name
@@ -48,7 +62,7 @@ SET arg=%~2
 IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
-		SET _KRB5CCNAME_SOURCE=[33m
+		SET _KRB5CCNAME_SOURCE=!_C_OPT!
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -58,7 +72,7 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET SQLDEV_HOME=%arg%
-		SET _SQLDEV_HOME_SOURCE=[33m
+		SET _SQLDEV_HOME_SOURCE=!_C_OPT!
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -68,7 +82,7 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
-		SET _JAVA_HOME_SOURCE=[33m
+		SET _JAVA_HOME_SOURCE=!_C_OPT!
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -121,21 +135,20 @@ GOTO parse
 :endparse
 
 IF "%SQLDEV_HOME%" == "" (
-	REM ECHO [91m!PROG![0m: [96mSQLDEV_HOME[0m must be set in the environment or set with [93m-h[0m>&2
-	REM SET SQLDEV_HOME=[38;5;108mUNSET[0m
-	REM SET SQLDEV_HOME=[38;5;138mUNSET[0m browny
-	SET SQLDEV_HOME=[91mSQLDEV_HOME[0m
-	GOTO :usage
+	REM ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment or set with !_C_ARG!-h!_C_OFF!>&2
+	SET SQLDEV_HOME=!_C_ERR!SQLDEV_HOME!_C_OFF!
+	GOTO usage
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO [91m!PROG![0m: invalid SQL Developer home>&2
+	ECHO !_C_ERR!!PROG!!_C_OFF!: invalid SQL Developer home>&2
 	EXIT /B 1
 )
+
 IF NOT "!HHFLAG!" == "" (
 	IF "!HFLAG!" == "" (
 		SET ERRFLAG=Y
 	) ELSE (
-		ECHO|SET /p="[92m!PROG![0m: creating SQLDEV_HOME in registry: "
+		ECHO|SET /p="!_C_MSG!!PROG!!_C_OFF!: creating SQLDEV_HOME in registry: "
 		SETX SQLDEV_HOME !SQLDEV_HOME! /M 2>&1 | FOR /F "tokens=1" %%i IN ('more') DO @(
 			IF NOT "%%i" == "ERROR:" (
 				ECHO HKEY_LOCAL_MACHINE
@@ -158,14 +171,14 @@ IF "!JJFLAG!" == "" (
 		IF NOT "!SetJavaHome!" == "" (
 			REM Overrides all JAVA_HOME settings unless -J specified
 			SET JAVA_HOME=!SetJavaHome!
-			SET _JAVA_HOME_SOURCE=[32m
+			SET _JAVA_HOME_SOURCE=!_C_CFG!
 		)
 	)
 )
 REM TODO - IF KRB5_CONFIG set in environment use it or allow to be overriden with -k (and -K)
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO [91m!PROG![0m: invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_CONFIG=%JAVA_HOME%\conf\security\krb5.conf
@@ -214,12 +227,12 @@ IF "!UFLAG!" == "" (
 	CALL :versionpart !VERSION! MAJOR
 	CALL :versionpart !VERSION! MINOR 2
 	IF !MAJOR! GTR 21 (
-		ECHO [93m!PROG![0m: Java releases [!MAJOR!.!MINOR!] above 21.1 not supported by IDE>&2
+		ECHO !_C_ARG!!PROG!!_C_OFF!: Java releases [!MAJOR!.!MINOR!] above 21.1 not supported by IDE>&2
 		REM EXIT /B 1
 	)
 	IF !MAJOR! EQU 21 (
 		IF !MINOR! GTR 1 (
-			ECHO [93m!PROG![0m: Java releases [!MAJOR!.!MINOR!] above 21.1 not supported by IDE>&2
+			ECHO !_C_ARG!!PROG!!_C_OFF!: Java releases [!MAJOR!.!MINOR!] above 21.1 not supported by IDE>&2
 			REM EXIT /B 1
 		)
 	)
@@ -240,14 +253,14 @@ IF NOT "!EFLAG!" == "" (
 
 IF NOT "!TFLAG!" == "" (
 	IF NOT EXIST !KRB5_CONFIG_TEMPLATE! (
-		ECHO [91m!PROG![0m: cannot open !KRB5_CONFIG_TEMPLATE!>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: cannot open !KRB5_CONFIG_TEMPLATE!>&2
 		EXIT /B 1
 	)
-	ECHO [92m!PROG![0m: saving !KRB5_CONFIG_TEMPLATE! as !ETC!\krb5.conf
+	ECHO !_C_MSG!!PROG!!_C_OFF!: saving !KRB5_CONFIG_TEMPLATE! as !ETC!\krb5.conf
 	IF NOT EXIST !ETC! (
 		MKDIR !ETC! >NUL 2>&1
 		IF %ERRORLEVEL% NEQ 0 (
-			ECHO [91m!PROG![0m: cannot create !ETC!>&2
+			ECHO !_C_ERR!!PROG!!_C_OFF!: cannot create !ETC!>&2
 			EXIT /B 1
 		)
 	) 
@@ -256,13 +269,13 @@ IF NOT "!TFLAG!" == "" (
 
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf (
 	ECHO. >> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
-	ECHO [92m!PROG![0m: including kerberos.conf in nondebug
+	ECHO !_C_MSG!!PROG!!_C_OFF!: including kerberos.conf in nondebug
 	ECHO IncludeConfFile kerberos.conf>> !SQLDEV_HOME!\sqldeveloper\bin\sqldeveloper-nondebug.conf
 )
 
 REM Create startup script - use JAAS
 
-ECHO|SET /p="[92m!PROG![0m: creating startup scripts: "
+ECHO|SET /p="!_C_MSG!!PROG!!_C_OFF!: creating startup scripts: "
 
 ECHO|SET /p="krb_sqldeveloper.cmd "
 ECHO @ECHO OFF> !SQLDEV_HOME!\krb_sqldeveloper.cmd
@@ -285,7 +298,7 @@ REM --icon-file (allows specifying the path to an icon file for the shortcut)
 REM --description ('Comment' field)
 REM 
 IF EXIST "C:\Program Files\Git\mingw64\bin\create-shortcut.exe" (
-	ECHO|SET /p="[92m!PROG![0m: creating Desktop shortcuts: "
+	ECHO|SET /p="!_C_MSG!!PROG!!_C_OFF!: creating Desktop shortcuts: "
 
 	ECHO|SET /p="!SHORTCUT! "
 	create-shortcut.exe --work-dir "!SQLDEV_HOME!" --icon-file "!SQLDEV_HOME!\sqldeveloper.exe" --description "Kerberos kinit for SQL Developer created by krb_conf" "!SQLDEV_HOME!\krb_sqldeveloper.cmd" "%USERPROFILE%\Desktop\!SHORTCUT!.lnk"
@@ -308,7 +321,7 @@ IF NOT "!EEFLAG!" == "" (
 )
 
 REM Relative path
-ECHO [92m!PROG![0m: writing properties to kerberos.conf
+ECHO !_C_MSG!!PROG!!_C_OFF!: writing properties to kerberos.conf
 ECHO AddVMOption -Dsun.security.krb5.debug=true> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 REM Moot. SQL Developer looks for this anyway:
 REM ECHO AddVMOption -Djava.security.krb5.conf=../../jdk/jre/conf/security/krb5.conf>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
@@ -328,25 +341,25 @@ ECHO # AddVMOption -Djava.security.auth.login.config=!JAAS_CONFIG!>> !SQLDEV_HOM
 ECHO # However, we need to specify the module NAME in the config file that we create:>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 ECHO AddVMOption -Doracle.net.KerberosJaasLoginModule=!NAME!>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 IF !MAJOR! GTR 21 (
-	ECHO [92m!PROG![0m: disallowing security.manager in kerberos.conf version !MAJOR!
+	ECHO !_C_MSG!!PROG!!_C_OFF!: disallowing security.manager in kerberos.conf version !MAJOR!
 	ECHO AddVMOption -Djava.security.manager=disallow>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 )
 
 IF NOT "!PFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO [91m!PROG![0m: install Git for Windows to use -p option>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: install Git for Windows to use -p option>&2
 		EXIT /B 1
 	)
 
 	SET PREFS_FILE=%APPDATA%\SQL Developer\system!VER_FULL!\o.sqldeveloper\product-preferences.xml
 	IF NOT EXIST "!PREFS_FILE!" (
-		ECHO [91m!PROG![0m: cannot open !PREFS_FILE!>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: cannot open !PREFS_FILE!>&2
 		EXIT /B 1
 	)
 	REM if not there add:
 	REM       <value n="KERBEROS_CACHE" v="C:/Users/demo/AppData/Local/krb5cc_demo"/>
 	REM       <value n="KERBEROS_CONFIG" v="C:/Oracle/jdk-25.0.1/conf/security/krb5.conf"/>
-	ECHO [92m!PROG![0m: updating preferences: !PREFS_FILE!
+	ECHO !_C_MSG!!PROG!!_C_OFF!: updating preferences: !PREFS_FILE!
 	ECHO  KERBEROS_CACHE = !KERBEROS_CACHE! | sed "s;\\\\\{1,\\};\\\;g"
 	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG! | sed "s;\\\\\{1,\\};\\\;g"
 
@@ -355,29 +368,29 @@ IF NOT "!PFLAG!" == "" (
 
 IF NOT "!WFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO [91m!PROG![0m: install Git for Windows to use -w option>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: install Git for Windows to use -w option>&2
 		EXIT /B 1
 	)
 	CALL :escape JAVA_HOME
-	ECHO [92m!PROG![0m: setting SetJavaHome in !CONF!
+	ECHO !_C_MSG!!PROG!!_C_OFF!: setting SetJavaHome in !CONF!
 	sed --in-place=.bak '/^^#* *SetJavaHome / {s@.*@SetJavaHome '!JAVA_HOME!'@; }' "!CONF!"
 )
 IF NOT "!UFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
-		ECHO [91m!PROG![0m: install Git for Windows to use -u option>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: install Git for Windows to use -u option>&2
 		EXIT /B 1
 	)
-	ECHO [92m!PROG![0m: unsetting SetJavaHome in !CONF!
+	ECHO !_C_MSG!!PROG!!_C_OFF!: unsetting SetJavaHome in !CONF!
 	sed --in-place=.bak '/[^^#]* *SetJavaHome / { s@^^ *@# ^&@; }' "!CONF!"
 )
-ECHO [92m!PROG![0m: creating JAAS login configuration !JAAS_CONFIG!
+ECHO !_C_MSG!!PROG!!_C_OFF!: creating JAAS login configuration !JAAS_CONFIG!
 CALL :jaasconfig
 
 IF EXIST !ETC!\krb5.conf (
-	ECHO [92m!PROG![0m: template krb5.conf copied to !KRB5_CONFIG!
+	ECHO !_C_MSG!!PROG!!_C_OFF!: template krb5.conf copied to !KRB5_CONFIG!
 	COPY /V !ETC!\krb5.conf !KRB5_CONFIG!
 ) ELSE (
-	ECHO [92m!PROG![0m: new krb5.conf created at !KRB5_CONFIG!
+	ECHO !_C_MSG!!PROG!!_C_OFF!: new krb5.conf created at !KRB5_CONFIG!
 	CALL :createkrb5conf
 )
 
@@ -385,25 +398,25 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO [91mUsage[0m: [1mkrb_conf [0m[[93m-h [33msqldev_home[0m [[93m-H[0m]] [[93m-c [33mkrb5ccname[0m[0m] [[93m-J [33mjava_home[0m [0m[[93m-w[0m]]^|[93m-u[0m] [[93m-p[0m] [[93m-r[0m] [[93m-E[0m][0m [[93m-t [33mfile[0m[0m] [[93m-V[0m][0m>&2
-	ECHO   [93m-h[0m [33msqldev_home[0m   Specify SQL Developer home to override [96mSQLDEV_HOME[0m (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME![0m^)>&2
-	ECHO   [93m-H[0m               Set [33msqldev_home[0m environment variable in the registry, first>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: krb_conf !_C_OFF![!_C_ARG!-h !_C_OPT!sqldev_home!_C_OFF! [!_C_ARG!-H!_C_OFF!]] [!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!!_C_OFF!] [!_C_ARG!-J !_C_OPT!java_home!_C_OFF! !_C_OFF![!_C_ARG!-w!_C_OFF!]]^|!_C_ARG!-u!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-r!_C_OFF!] [!_C_ARG!-E!_C_OFF!]!_C_OFF! [!_C_ARG!-t !_C_OPT!file!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!]!_C_OFF!>&2
+	ECHO   !_C_ARG!-h!_C_OFF! !_C_OPT!sqldev_home!_C_OFF!   Specify SQL Developer home to override !_C_ENV!SQLDEV_HOME!_C_OFF! (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME!!_C_OFF!^)>&2
+	ECHO   !_C_ARG!-H!_C_OFF!               Set !_C_OPT!sqldev_home!_C_OFF! environment variable in the !_C_REG!registry!_C_OFF!, first>&2
 	ECHO                     attempt HKEY_LOCAL_MACHINE and fallback to HKEY_CURRENT_USER>&2
-	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
-	ECHO   [93m-p[0m               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences>&2
-	ECHO   [93m-r[0m               Resolve krb5.conf parameters>&2
-	ECHO   [93m-v[0m               Print SQL Developer version and exit>&2
-	ECHO   [93m-E[0m               Escape rather than canonicalize paths for preferences files>&2
+	ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
+	ECHO   !_C_ARG!-p!_C_OFF!               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences>&2
+	ECHO   !_C_ARG!-r!_C_OFF!               Resolve krb5.conf parameters>&2
+	ECHO   !_C_ARG!-v!_C_OFF!               Print SQL Developer version and exit>&2
+	ECHO   !_C_ARG!-E!_C_OFF!               Escape rather than canonicalize paths for preferences files>&2
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
+		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
+		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
-	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
-	ECHO   [93m-w[0m               Write value of [33mjava_home[0m to [032mproduct.conf[0m>&2
-	ECHO   [93m-u[0m               Unset [33mjava_home[0m in [32mproduct.conf[0m>&2
-	ECHO   [93m-t[0m [33mfile[0m          Install and use [33mfile[0m as a template krb5.conf>&2
-	ECHO   [93m-V[0m               Print Java version and exit
+	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
+	ECHO   !_C_ARG!-w!_C_OFF!               Write value of !_C_OPT!java_home!_C_OFF! to !_C_CFG!product.conf!_C_OFF!>&2
+	ECHO   !_C_ARG!-u!_C_OFF!               Unset !_C_OPT!java_home!_C_OFF! in !_C_CFG!product.conf!_C_OFF!>&2
+	ECHO   !_C_ARG!-t!_C_OFF! !_C_OPT!file!_C_OFF!          Install and use !_C_OPT!file!_C_OFF! as a template krb5.conf>&2
+	ECHO   !_C_ARG!-V!_C_OFF!               Print Java version and exit
 ENDLOCAL
 EXIT /B 1
 

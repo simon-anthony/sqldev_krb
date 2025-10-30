@@ -10,31 +10,33 @@ SETLOCAL enabledelayedexpansion
 
 SET PROG=krb_ktab
 
+REM COLOURS
+SET _C_INT=[38;5;214m
+SET _C_ENV=[96m
+SET _C_ERR=[91m
+SET _C_MSG=[92m
+SET _C_DNS=[35m
+SET _C_ARG=[93m
+SET _C_OPT=[33m
+SET _C_CFG=[32m
+SET _C_JAA=[38;5;115m
+SET _C_REG=[36m
+SET _C_OFF=[0m
+SET _C_BLD=[0m
+
 SET REALM=%USERDNSDOMAIN%
 SET PRINCIPAL=%USERNAME%@%REALM%
 
-IF "%SQLDEV_HOME%" == "" (
-	ECHO [91m!PROG![0m: [96mSQLDEV_HOME[0m must be set in the environment>&2
-	SET SQLDEV_HOME=[91mSQLDEV_HOME[0m
-	IF "%~1" == "-?"  GOTO :usage
-	EXIT /B 1
-)
-IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO [91m!PROG![0m: invalid SQL Developer home !SQLDEV_HOME!>&2
-	IF "%~1" == "-?"  GOTO :usage
-	EXIT /B 1
-)
-
 IF "%KRB5_KTNAME%" == "" (
-	SET _KRB5_KTNAME_SOURCE=[31m
+	SET _KRB5_KTNAME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _KRB5_KTNAME_SOURCE=[96m
+	SET _KRB5_KTNAME_SOURCE=!_C_ENV!
 )
 
 IF "%JAVA_HOME%" == "" (
-	SET _JAVA_HOME_SOURCE=[31m
+	SET _JAVA_HOME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _JAVA_HOME_SOURCE=[96m
+	SET _JAVA_HOME_SOURCE=!_C_ENV!
 )
 
 SET KTABOPTS=
@@ -49,6 +51,18 @@ IF "%KRB5_KTNAME%" == "" (
 	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
 )
 
+IF "%SQLDEV_HOME%" == "" (
+	ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment>&2
+	SET SQLDEV_HOME=!_C_ERR!SQLDEV_HOME!_C_OFF!
+	IF "%~1" == "-?"  GOTO usage
+	EXIT /B 1
+)
+IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
+	ECHO !_C_ERR!!PROG!!_C_OFF!: invalid SQL Developer home !SQLDEV_HOME!>&2
+	IF "%~1" == "-?"  GOTO usage
+	EXIT /B 1
+)
+
 SET ERRFLAG=
 
 :parse
@@ -61,7 +75,7 @@ IF "%option%" == "-k" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5_KTNAME=%arg%
-		SET _KRB5_KTNAME_SOURCE=[33m
+		SET _KRB5_KTNAME_SOURCE=!_C_OPT!
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -113,7 +127,7 @@ IF "%option%" == "-k" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
-		SET _JAVA_HOME_SOURCE=[33m
+		SET _JAVA_HOME_SOURCE=!_C_OPT!
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -184,7 +198,7 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO [91m!PROG![0m: invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_BIN=%JAVA_HOME%\bin
@@ -206,14 +220,14 @@ IF NOT "!VVFLAG!" == "" (
 IF NOT "!SFLAG!" == "" (
 	CALL :versionpart !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
-		ECHO [91m!PROG![0m: Java release 19 or above required for -s>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: Java release 19 or above required for -s>&2
 		EXIT /B 1
 	)
 )
 IF NOT "!FFLAG!" == "" (
 	CALL :versionpart !VERSION! MAJOR
 	IF NOT !MAJOR! GEQ 19 (
-		ECHO [91m!PROG![0m: Java release 19 or above required for -f>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: Java release 19 or above required for -f>&2
 		EXIT /B 1
 	)
 )
@@ -237,7 +251,7 @@ IF NOT "!PFLAG!" == "" (
 		IF NOT "!VFLAG!" == "" (
 			TYPE !KRB5CCNAME!.log
 		) ELSE (
-			ECHO [91m!PROG![0m: Bad password
+			ECHO !_C_ERR!!PROG!!_C_OFF!: Bad password
 		)
 		EXIT /B 1
 	)
@@ -249,26 +263,26 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO [91mUsage[0m: [1mkrb_ktab[0m [[93m-e[0m] [[93m-V[0m] [[93m-x[0m] [[93m-A[0m] [[93m-s [33msalt[0m^|[93m-f[0m] [[93m-K[0m^|[0m[93m-k [33mkrb5_ktname[0m] [[93m-J [33mjava_home[0m] [[93m-p[0m] [[93m-x[0m] [[33mprincipal_name[0m]
-	ECHO   [93m-k[0m [33mkrb5_ktname[0m   Specify keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)
-	ECHO   [93m-K[0m               Unset any default value of [96mKRB5_KTNAME[0m
-	ECHO   [93m-A[0m               New keys are appended to keytab
-	ECHO   [93m-e[0m               Echo the command only
-	ECHO   [93m-p[0m               Verify password before creating keytab
-	ECHO   [93m-v[0m               Verbose messages
-	ECHO   [93m-D[0m               Turn on krb5.debug
-	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)
-	ECHO   [93m-s[0m [33msalt[0m          Specify the salt to use e.g. if sAMAccountName does not match userPrincipalName
-	ECHO   [93m-f[0m               Request salt from KDC
-	ECHO   [93m-V[0m               Print Java version and exit
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_ktab!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-A!_C_OFF!] [!_C_ARG!-s !_C_OPT!salt!_C_OFF!^|!_C_ARG!-f!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_OFF!!_C_ARG!-k !_C_OPT!krb5_ktname!_C_OFF!] [!_C_ARG!-J !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_OPT!principal_name!_C_OFF!]
+	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_ktname!_C_OFF!   Specify keytab !_C_ENV!KRB5_KTNAME!_C_OFF! (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME!!_C_OFF!^)
+	ECHO   !_C_ARG!-K!_C_OFF!               Unset any default value of !_C_ENV!KRB5_KTNAME!_C_OFF!
+	ECHO   !_C_ARG!-A!_C_OFF!               New keys are appended to keytab
+	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only
+	ECHO   !_C_ARG!-p!_C_OFF!               Verify password before creating keytab
+	ECHO   !_C_ARG!-v!_C_OFF!               Verbose messages
+	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug
+	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)
+	ECHO   !_C_ARG!-s!_C_OFF! !_C_OPT!salt!_C_OFF!          Specify the salt to use e.g. if sAMAccountName does not match userPrincipalName
+	ECHO   !_C_ARG!-f!_C_OFF!               Request salt from KDC
+	ECHO   !_C_ARG!-V!_C_OFF!               Print Java version and exit
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
+		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
+		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
-	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
+	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
 
-	ECHO   Options [93m-s[0m and [93m-f[0m only supported with Java ^>=19
+	ECHO   Options !_C_ARG!-s!_C_OFF! and !_C_ARG!-f!_C_OFF! only supported with Java ^>=19
 ENDLOCAL
 EXIT /B 1
 

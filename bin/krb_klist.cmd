@@ -5,19 +5,22 @@ REM vim: fileformat=dos:
 SETLOCAL enabledelayedexpansion
 
 SET PROG=krb_klist
-SET REALM=%USERDNSDOMAIN%
 
-IF "%SQLDEV_HOME%" == "" (
-	ECHO [91m!PROG![0m: [96mSQLDEV_HOME[0m must be set in the environment>&2
-	SET SQLDEV_HOME=[91mSQLDEV_HOME[0m
-	IF "%~1" == "-?"  GOTO :usage
-	EXIT /B 1
-)
-IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO [91m!PROG![0m: invalid SQL Developer home !SQLDEV_HOME!>&2
-	IF "%~1" == "-?"  GOTO :usage
-	EXIT /B 1
-)
+REM COLOURS
+SET _C_INT=[38;5;214m
+SET _C_ENV=[96m
+SET _C_ERR=[91m
+SET _C_MSG=[92m
+SET _C_DNS=[35m
+SET _C_ARG=[93m
+SET _C_OPT=[33m
+SET _C_CFG=[32m
+SET _C_JAA=[38;5;115m
+SET _C_REG=[36m
+SET _C_OFF=[0m
+SET _C_BLD=[0m
+
+SET REALM=%USERDNSDOMAIN%
 
 SET KLISTOPTS=
 
@@ -30,22 +33,34 @@ IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
-	SET _KRB5CCNAME_SOURCE=[31m
+	SET _KRB5CCNAME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _KRB5CCNAME_SOURCE=[96m
+	SET _KRB5CCNAME_SOURCE=!_C_ENV!
 )
 IF "%KRB5_KTNAME%" == "" (
 	REM JDK does not recognise KRB5_KTNAME
 	SET KRB5_KTNAME=%LOCALAPPDATA%\krb5_%USERNAME%.keytab
-	SET _KRB5_KTNAME_SOURCE=[31m
+	SET _KRB5_KTNAME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _KRB5_KTNAME_SOURCE=[96m
+	SET _KRB5_KTNAME_SOURCE=!_C_ENV!
 )
 
 IF "%JAVA_HOME%" == "" (
-	SET _JAVA_HOME_SOURCE=[31m
+	SET _JAVA_HOME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _JAVA_HOME_SOURCE=[96m
+	SET _JAVA_HOME_SOURCE=!_C_ENV!
+)
+
+IF "%SQLDEV_HOME%" == "" (
+	ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment>&2
+	SET SQLDEV_HOME=!_C_ERR!SQLDEV_HOME!_C_OFF!
+	IF "%~1" == "-?"  GOTO usage
+	EXIT /B 1
+)
+IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
+	ECHO !_C_ERR!!PROG!!_C_OFF!: invalid SQL Developer home !SQLDEV_HOME!>&2
+	IF "%~1" == "-?"  GOTO usage
+	EXIT /B 1
 )
 
 SET ERRFLAG=
@@ -87,7 +102,7 @@ IF "%option%" == "-c" (
 	IF NOT "!MMFLAG!" == "" SET ERRFLAG=Y
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
-		SET _JAVA_HOME_SOURCE=[33m
+		SET _JAVA_HOME_SOURCE=!_C_OPT!
 		SHIFT
 	) ELSE (
 		SET ERRFLAG=Y
@@ -111,7 +126,7 @@ SET NAME=%~1
 
 IF "!MMFLAG!" == "" (
 	IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-		ECHO [91m!PROG![0m: invalid SQL Developer home>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: invalid SQL Developer home>&2
 		EXIT /B 1
 	)
 	IF NOT "!KFLAG!" == "" (
@@ -126,7 +141,7 @@ IF "!MMFLAG!" == "" (
 	)
 	IF NOT "%JAVA_HOME%" == "" (
 		IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-			ECHO [91m!PROG![0m: invalid JAVA_HOME %JAVA_HOME%>&2
+			ECHO !_C_ERR!!PROG!!_C_OFF!: invalid JAVA_HOME %JAVA_HOME%>&2
 			IF "!ERRFLAG!" == "" EXIT /B 1
 			SET ERRFLAG=Y
 		)
@@ -166,7 +181,7 @@ IF "!JJFLAG!" == "" (
 
 IF NOT "%JAVA_HOME%" == "" (
 	IF NOT EXIST "%JAVA_HOME%\bin\java.exe" (
-		ECHO [91m!PROG![0m: invalid JAVA_HOME %JAVA_HOME%>&2
+		ECHO !_C_ERR!!PROG!!_C_OFF!: invalid JAVA_HOME %JAVA_HOME%>&2
 		IF "!ERRFLAG!" == "" EXIT /B 1
 	)
 	SET KRB5_BIN=%JAVA_HOME%\bin
@@ -200,21 +215,21 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO [91mUsage[0m: [1mkrb_klist[0m [[93m-M[0m^|[93m-J [33mjava_home[0m] [[93m-e[0m] [[93m-V[0m] [[93m-c[0m^|[93m[93m-k[0m] [[33mname[0m]>&2
-	ECHO   [93m-c[0m               Specifies credential cache [096mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
-	ECHO   [93m-k[0m               Specifies keytab [96mKRB5_KTNAME[0m (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME![0m^)>&2
-	ECHO   [93m-e[0m               Echo the command only>&2
-	ECHO   [93m-x[0m               Produce trace (in %TEMP%\krb5_trace.log)>&2
-	ECHO   [93m-D[0m               Turn on krb5.debug>&2
-	ECHO   [93m-M[0m               Use MIT Kerberos>&2
-	ECHO   [93m-V[0m               Print Java version and exit>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_klist!_C_OFF! [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-J !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-c!_C_OFF!^|!_C_ARG!!_C_ARG!-k!_C_OFF!] [!_C_OPT!name!_C_OFF!]>&2
+	ECHO   !_C_ARG!-c!_C_OFF!               Specifies credential cache !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
+	ECHO   !_C_ARG!-k!_C_OFF!               Specifies keytab !_C_ENV!KRB5_KTNAME!_C_OFF! (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME!!_C_OFF!^)>&2
+	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only>&2
+	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)>&2
+	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug>&2
+	ECHO   !_C_ARG!-M!_C_OFF!               Use MIT Kerberos>&2
+	ECHO   !_C_ARG!-V!_C_OFF!               Print Java version and exit>&2
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!JAVA_HOME![0m^) if unset>&2
+		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
-		ECHO   [93m-J[0m [33mjava_home[0m     Specify [96mJAVA_HOME[0m (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre[0m^) if unset>&2
+		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
-	ECHO                     use SetJavaHome from [32mproduct.conf[0m or SQL Developer built-in JDK>&2
-	ECHO   [33mname[0m             The cache or keytab of which to list the contents>&2
+	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
+	ECHO   !_C_OPT!name!_C_OFF!             The cache or keytab of which to list the contents>&2
 	ECHO When no cache or keytab is specified the default action is to search for all credential caches>&2
 ENDLOCAL
 EXIT /B 1

@@ -6,6 +6,20 @@ SETLOCAL enabledelayedexpansion
 
 SET PROG=krb_pkinit
 
+REM COLOURS
+SET _C_INT=[38;5;214m
+SET _C_ENV=[96m
+SET _C_ERR=[91m
+SET _C_MSG=[92m
+SET _C_DNS=[35m
+SET _C_ARG=[93m
+SET _C_OPT=[33m
+SET _C_CFG=[32m
+SET _C_JAA=[38;5;115m
+SET _C_REG=[36m
+SET _C_OFF=[0m
+SET _C_BLD=[0m
+
 SET REALM=%USERDNSDOMAIN%
 
 SET KINITOPTS=
@@ -26,9 +40,9 @@ IF "%KRB5CCNAME%" == "" (
 	REM This is the default cache unles overridden by specifying KRB5CCNAME
 	REM JDK kinit uses %HOMEPATH%\krb5cc_%USERNAME%
 	SET KRB5CCNAME=%LOCALAPPDATA%\krb5cc_%USERNAME%
-	SET _KRB5CCNAME_SOURCE=[31m
+	SET _KRB5CCNAME_SOURCE=!_C_INT!
 ) ELSE (
-	SET _KRB5CCNAME_SOURCE=[96m
+	SET _KRB5CCNAME_SOURCE=!_C_ENV!
 )
 
 SET ERRFLAG=
@@ -43,7 +57,7 @@ IF "%option%" == "-c" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET KRB5CCNAME=%arg%
-		SET _KRB5CCNAME_SOURCE=[33m
+		SET _KRB5CCNAME_SOURCE=!_C_OPT!
 		SHIFT
 	) ELSE (
 		ERRFLAG=Y
@@ -134,16 +148,16 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO [91mUsage[0m: [1mkrb_pkinit [0m[[93m-e[0m] [[93m-x[0m] [[93m-C[0m^|[93m-c [33mkrb5ccname^>[0m] [[93m-d [33mdir[0m] [[93m-D [33mdir[0m] [[93m-A [33mdir[0m]>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_pkinit !_C_OFF![!_C_ARG!-e!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-C!_C_OFF!^|!_C_ARG!-c !_C_OPT!krb5ccname^>!_C_OFF!] [!_C_ARG!-d !_C_OPT!dir!_C_OFF!] [!_C_ARG!-D !_C_OPT!dir!_C_OFF!] [!_C_ARG!-A !_C_OPT!dir!_C_OFF!]>&2
 
-	ECHO   [93m-c[0m [33mkrb5ccname[0m    Specify [96mKRB5CCNAME[0m (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME![0m^)>&2
-	ECHO   [93m-C[0m               Unset any default value of [96mKRB5CCNAME[0m>&2
+	ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
+	ECHO   !_C_ARG!-C!_C_OFF!               Unset any default value of !_C_ENV!KRB5CCNAME!_C_OFF!>&2
 
-	ECHO   -d               Directory [33mdir[0m in which to find certificate (%USERNAME%.crt)>&2
-	ECHO   -D               Directory [33mdir[0m in which to find key (%USERNAME%.key)>&2
-	ECHO   -A               Directory [33mdir[0m in which to find anchor certificate (ca.crt)>&2
-	ECHO   -e               Echo the command only>&2
-	ECHO   -x               Produce trace (in %TEMP%\krb5_trace.log)>&2
-	ECHO  Default [33mdir[0m is %USERPROFILE%\Certs>&2
+	ECHO   !_C_ARG!-d!_C_OFF!               Directory !_C_OPT!dir!_C_OFF! in which to find certificate (%USERNAME%.crt)>&2
+	ECHO   !_C_ARG!-D!_C_OFF!               Directory !_C_OPT!dir!_C_OFF! in which to find key (%USERNAME%.key)>&2
+	ECHO   !_C_ARG!-A!_C_OFF!               Directory !_C_OPT!dir!_C_OFF! in which to find anchor certificate (ca.crt)>&2
+	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only>&2
+	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)>&2
+	ECHO  Default !_C_OPT!dir!_C_OFF! is %USERPROFILE%\Certs>&2
 ENDLOCAL
 EXIT /B 1
