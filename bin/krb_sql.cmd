@@ -7,13 +7,13 @@ SETLOCAL enabledelayedexpansion
 SET PROG=krb_sql
 
 SET ORACLE_HOME=
-IF "%SQLDEV_HOME%" == "" (
-	SET SQLDEV_HOME=C:\Oracle\sqldeveloper
-)
-SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
 
+IF "%SQLDEV_HOME%" == "" (
+	ECHO [91m!PROG![0m: [96mSQLDEV_HOME[0m must be set in the environment>&2
+	EXIT /B 1
+)
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
-	ECHO [91m!PROG![0m: invalid SQL Developer home>&2
+	ECHO [91m!PROG![0m: invalid SQL Developer home !SQLDEV_HOME!>&2
 	EXIT /B 1
 )
 
