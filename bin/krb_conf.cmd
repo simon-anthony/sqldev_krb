@@ -141,11 +141,11 @@ IF NOT "!HHFLAG!" == "" (
 		SET ERRFLAG=Y
 	) ELSE (
 		ECHO|SET /p="!_C_MSG!!PROG!!_C_OFF!: creating SQLDEV_HOME in registry: "
-		SETX SQLDEV_HOME !SQLDEV_HOME! /M 2>&1 | FOR /F "tokens=1" %%i IN ('more') DO @(
+		SETX SQLDEV_HOME %SQLDEV_HOME% /M 2>&1 | FOR /F "tokens=1" %%i IN ('more') DO @(
 			IF NOT "%%i" == "ERROR:" (
 				ECHO HKEY_LOCAL_MACHINE
 			) ELSE (
-				SETX SQLDEV_HOME !SQLDEV_HOME! /M > NUL 2>&1
+				SETX SQLDEV_HOME %SQLDEV_HOME% > NUL 2>&1
 				ECHO HKEY_CURRENT_USER
 			)
 		)
