@@ -45,9 +45,9 @@ IF "%JAVA_HOME%" == "" (
 )
 
 IF "%SQLDEV_HOME%" == "" (
-	ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment>&2
 	SET SQLDEV_HOME=!_C_ERR!SQLDEV_HOME!_C_OFF!
 	IF "%~1" == "-?"  GOTO usage
+	ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment>&2
 	EXIT /B 1
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (

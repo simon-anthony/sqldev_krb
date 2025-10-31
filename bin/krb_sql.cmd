@@ -409,6 +409,11 @@ EXIT /B 1
 	) do if "%~2" neq "" (set %~2=%%A) else echo(%%A
 EXIT /B
 
+REM regquery: retrieve value of str from HKLM\SOFTWARE\ORACLE
+:regquery str
+	FOR /f "tokens=3" %%i IN ('reg query HKLM\SOFTWARE\ORACLE /s /f "%~1" /e ^| findstr %~1') DO (CALL set %~1=%%i%%)
+EXIT /B 0
+
 REM toUpper: make str uppercase
 :toUpper str
 	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"

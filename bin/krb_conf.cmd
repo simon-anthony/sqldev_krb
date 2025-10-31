@@ -124,7 +124,10 @@ GOTO parse
 :endparse
 
 IF "%SQLDEV_HOME%" == "" (
-	REM ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment or set with !_C_ARG!-h!_C_OFF!>&2
+	IF "!ERRFLAG!" == "" (
+		ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment or set with !_C_ARG!-h!_C_OFF!>&2
+		EXIT /B 1
+	) 
 	SET SQLDEV_HOME=!_C_ERR!SQLDEV_HOME!_C_OFF!
 	GOTO usage
 )
