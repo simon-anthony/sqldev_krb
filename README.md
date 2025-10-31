@@ -79,11 +79,19 @@ and **SQLcl**:
     </kbd>
 </p>
 
-Next, check that you can connect with SQLcl:
+Next, check that you can connect with SQLcl. Here are the options:
 
 <p align="center" spacing="10">
     <kbd>
         <img src="media/krb_sql-usage.png" />
+    </kbd>
+</p>
+
+In this example, `KRB5_CONFIG` is already set in the environment to somewhere we don't want. Hence we override it:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_sql-exec.png" />
     </kbd>
 </p>
 
