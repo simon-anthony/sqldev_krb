@@ -11,7 +11,7 @@ Some enhanced functioanilty requires the installation of [Git for Windows](https
 </p>
 
 
-The optional features for **klist** and **kinit** require the MIT Kerberos distribution to be installed. To use PKINIT, it will be necessary to [build](#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11) the MIT Kerberos Windows installable package with PKINIT enabled.
+To use the **krb_pkinit** tool the MIT Kerberos distribution needs to be installed. To use PKINIT, it will be necessary to [build](#Building-MIT-Kerberos-with-PKINIT-Enabled-for-Windows-11) the MIT Kerberos Windows installable package with PKINIT enabled.
 
 > **_NOTE:_**  These tools specifically discuss using Kerberos within Java (GSS-API or JAAS) with SQL Developer and SQLcl (*thin client*s) and not Kerberos with OCI (*thick client*) from the Oracle Client or Instantclient.
 
@@ -34,13 +34,21 @@ The first step is to generate the files required for configuration. This is done
 
 <p align="center" spacing="10">
     <kbd>
-        <img src="media/krb_conf.PNG" />
+        <img src="media/krb_conf-usage.png" />
+    </kbd>
+</p>
+
+Note that `SQLDEV_HOME` must be set:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_conf-usage-sqldev_home.png" />
     </kbd>
 </p>
 
 Exceuting will generate a basic configuration for the user (it is assumed in this example that we have set `SQLDEV_HOME`).
 
-If we wish to configure SQL Developer to use an external JDK this can be done with the **-J** flag.
+If we wish to configure SQL Developer to use an external JDK (although this is no a requirement) this can be done with the **-J** flag.
 Note that if you attempt to use a JDK later than 21.1 a warning will be issued. 
 
 <p align="center" spacing="10">
