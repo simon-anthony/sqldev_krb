@@ -63,9 +63,9 @@ IF "!TNS_ADMIN!" == "" (
 )
 
 IF "%SQLDEV_HOME%" == "" (
-	ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment>&2
 	SET SQLDEV_HOME=!_C_ERR!SQLDEV_HOME!_C_OFF!
 	IF "%~1" == "-?"  GOTO usage
+	ECHO !_C_ERR!!PROG!!_C_OFF!: !_C_ENV!SQLDEV_HOME!_C_OFF! must be set in the environment>&2
 	EXIT /B 1
 )
 IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
@@ -73,6 +73,7 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	IF "%~1" == "-?"  GOTO usage
 	EXIT /B 1
 )
+SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
 
 REM Define a Linefeed variable - the two lines after are significant
 set LF=^
@@ -148,10 +149,10 @@ IF "%option%" == "-k" (
 ) ELSE IF "%option%" == "-i" (
 	SHIFT
 	SET IFLAG=Y
-) ELSE IF "%option%" == "-j" (
+) ELSE IF "%option%" == "-J" (
 	SHIFT
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
-	SET JFLAG=Y
+	SET JJFLAG=Y
 ) ELSE IF "%option%" == "-a" (
 	REM this option needs Git for Windows UNIX tools
 	SHIFT
@@ -173,7 +174,7 @@ IF "%option%" == "-k" (
 	SHIFT
 	IF NOT "!AFLAG!" == "" SET ERRFLAG=Y
 	SET PFLAG=Y
-) ELSE IF "%option%" == "-J" (
+) ELSE IF "%option%" == "-j" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
@@ -182,7 +183,7 @@ IF "%option%" == "-k" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
-	SET JJFLAG=Y
+	SET JFLAG=Y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -229,18 +230,8 @@ IF NOT "!AFLAG!" == "" (
 	awk "/^[A-Z0-1]* =/ { print $1 }" %TNS_ADMIN%\tnsnames.ora
 	EXIT /B 0
 )
-REM IF NOT "!KFLAG!" == "" (
-REM 	IF NOT "!KKFLAG!" == "" (
-REM 		SET ERRFLAG=Y
-REM 	)
-REM )
-REM IF NOT "!CFLAG!" == "" (
-REM 	IF NOT "!CCFLAG!" == "" (
-REM 		SET ERRFLAG=Y
-REM 	)
-REM )
 IF NOT "!WFLAG!" == "" (
-	IF "!JFLAG!" == "" (
+	IF "!JJFLAG!" == "" (
 		SET ERRFLAG=Y
 	)
 )
@@ -251,7 +242,7 @@ CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
 CALL :getconf SetJavaHome !CONF!
 
-IF "!JJFLAG!" == "" (
+IF "!JFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (
 		REM Overrides all JAVA_HOME settings unless -J specified
 		SET JAVA_HOME=!SetJavaHome!
@@ -280,7 +271,7 @@ IF "!LLFLAG!" == "" (
 )
 
 IF NOT "!KRB5_CONFIG!" == "" (
-	IF NOT "!JFLAG!" == "" (
+	IF NOT "!JJFLAG!" == "" (
 		SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Djava.security.krb5.conf=!KRB5_CONFIG!
 	)
 	SET SQLOPTS=!SQLOPTS! -krb5_config !KRB5_CONFIG!
@@ -288,7 +279,7 @@ IF NOT "!KRB5_CONFIG!" == "" (
 
 IF NOT "!KRB5CCNAME!" == "" (
 	REM JAAS set Cache
-	IF "!JFLAG!" == "" SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
+	IF "!JJFLAG!" == "" SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
 )
 
 REM IF NOT "!ERRFLAG!" == "" GOTO usage
@@ -339,7 +330,7 @@ IF NOT "!WFLAG!" == "" (
 		)
 	)
 )
-IF NOT "!JFLAG!" == "" (
+IF NOT "!JJFLAG!" == "" (
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
 	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk
 	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=!NAME!
@@ -352,7 +343,7 @@ IF NOT "!EFLAG!" == "" (
 		ECHO KRB5CCNAME=!KRB5CCNAME!
 		ECHO TNS_ADMIN=!TNS_ADMIN!
 	)
-	IF NOT "!JFLAG!" == "" (
+	IF NOT "!JJFLAG!" == "" (
 		ECHO JAVA_TOOL_OPTIONS: !JAVA_TOOL_OPTIONS!
 	)
 	ECHO sql %SQLOPTS% /@%alias%
@@ -369,14 +360,14 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-j!_C_OFF![!_C_ARG!-w!_C_OFF!]] [!_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF!>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF!]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF!>&2
 	IF NOT "!LLFLAG!" == "" SET KRB5_CONFIG=DNS
 	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!   Specify !_C_ENV!KRB5_CONFIG!_C_OFF! (default: !_KRB5_CONFIG_SOURCE!!KRB5_CONFIG!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! i.e. use !_C_INT!internal!_C_OFF! default>&2
 	ECHO   !_C_ARG!-L!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! and !_C_INT!internal!_C_OFF! default i.e. use !_C_DNS!DNS SRV!_C_OFF! lookup>&2
 	ECHO   !_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!     Specify !_C_ENV!TNS_ADMIN!_C_OFF! (default: !_TNS_SOURCE!!TNS_ADMIN!!_C_OFF!^)>&2
 	ECHO                     if not in !_C_ENV!environment!_C_OFF! try !_C_REG!registry!_C_OFF!>&2
-	IF NOT "!JFLAG!" == "" (
+	IF NOT "!JJFLAG!" == "" (
 		ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!JAAS!_C_OFF!^)>&2
 		C
 		ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
@@ -384,14 +375,14 @@ EXIT /B 0
 	ECHO   !_C_ARG!-C!_C_OFF!               Unset any default value of !_C_ENV!KRB5CCNAME!_C_OFF!>&2
 	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only>&2
 	ECHO   !_C_ARG!-i!_C_OFF!               Install a template startup.sql>&2
-	ECHO   !_C_ARG!-j!_C_OFF!               Use !_C_JAA!JAAS!_C_OFF!. The environment variable !_C_ENV!JAAS_CONFIG!_C_OFF! can be set to use>&2
+	ECHO   !_C_ARG!-J!_C_OFF!               Use !_C_JAA!JAAS!_C_OFF!. The environment variable !_C_ENV!JAAS_CONFIG!_C_OFF! can be set to use>&2
         ECHO                     another login file (default: !_C_INT!!HOMEDRIVE!!HOMEPATH!\.java.login.config!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-w!_C_OFF!               Overwrite !_C_JAA!JAAS!_C_OFF! configuration with internal defaults>&2
 	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)>&2
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
 	ECHO   !_C_ARG!-p!_C_OFF!               Prompt the user for !_C_OPT!tns_alias!_C_OFF!>&2

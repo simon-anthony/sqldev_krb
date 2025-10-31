@@ -67,7 +67,7 @@ IF "%option%" == "-c" (
 		SET ERRFLAG=Y
 	)
 	SET HFLAG=Y
-) ELSE IF "%option%" == "-J" (
+) ELSE IF "%option%" == "-j" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
@@ -76,7 +76,7 @@ IF "%option%" == "-c" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
-	SET JJFLAG=Y
+	SET JFLAG=Y
 ) ELSE IF "%option%" == "-t" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
@@ -158,10 +158,10 @@ CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
 CALL :getconf SetJavaHome !CONF!
 
-IF "!JJFLAG!" == "" (
+IF "!JFLAG!" == "" (
 	IF "!UFLAG!" == "" (
 		IF NOT "!SetJavaHome!" == "" (
-			REM Overrides all JAVA_HOME settings unless -J specified
+			REM Overrides all JAVA_HOME settings unless -j specified
 			SET JAVA_HOME=!SetJavaHome!
 			SET _JAVA_HOME_SOURCE=!_C_CFG!
 		)
@@ -179,10 +179,10 @@ IF NOT "%JAVA_HOME%" == "" (
 )
 
 IF NOT "!WFLAG!" == "" (
-	IF "!JJFLAG!" == "" SET ERRFLAG=Y
+	IF "!JFLAG!" == "" SET ERRFLAG=Y
 )
 IF NOT "!UFLAG!" == "" (
-	IF NOT "!JJFLAG!" == "" SET ERRFLAG=Y
+	IF NOT "!JFLAG!" == "" SET ERRFLAG=Y
 )
 IF NOT "!VFLAG!" == "" (
 	ECHO !VER_FULL!
@@ -390,7 +390,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: krb_conf !_C_OFF![!_C_ARG!-h !_C_OPT!sqldev_home!_C_OFF! [!_C_ARG!-H!_C_OFF!]] [!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!!_C_OFF!] [!_C_ARG!-J !_C_OPT!java_home!_C_OFF! !_C_OFF![!_C_ARG!-w!_C_OFF!]]^|!_C_ARG!-u!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-r!_C_OFF!] [!_C_ARG!-E!_C_OFF!]!_C_OFF! [!_C_ARG!-t !_C_OPT!file!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!]!_C_OFF!>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: krb_conf !_C_OFF![!_C_ARG!-h !_C_OPT!sqldev_home!_C_OFF! [!_C_ARG!-H!_C_OFF!]] [!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!!_C_OFF!] [!_C_ARG!-j !_C_OPT!java_home!_C_OFF! !_C_OFF![!_C_ARG!-w!_C_OFF!]]^|!_C_ARG!-u!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-r!_C_OFF!] [!_C_ARG!-E!_C_OFF!]!_C_OFF! [!_C_ARG!-t !_C_OPT!file!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!]!_C_OFF!>&2
 	ECHO   !_C_ARG!-h!_C_OFF! !_C_OPT!sqldev_home!_C_OFF!   Specify SQL Developer home to override !_C_ENV!SQLDEV_HOME!_C_OFF! (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-H!_C_OFF!               Set !_C_OPT!sqldev_home!_C_OFF! environment variable in the !_C_REG!registry!_C_OFF!, first>&2
 	ECHO                     attempt HKEY_LOCAL_MACHINE and fallback to HKEY_CURRENT_USER>&2
@@ -400,9 +400,9 @@ EXIT /B 0
 	ECHO   !_C_ARG!-v!_C_OFF!               Print SQL Developer version and exit>&2
 	ECHO   !_C_ARG!-E!_C_OFF!               Escape rather than canonicalize paths for preferences files>&2
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
 	ECHO   !_C_ARG!-w!_C_OFF!               Write value of !_C_OPT!java_home!_C_OFF! to !_C_CFG!product.conf!_C_OFF!>&2

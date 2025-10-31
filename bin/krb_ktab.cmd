@@ -115,7 +115,7 @@ IF "%option%" == "-k" (
 	SHIFT
 	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
 	SET DDFLAG=y
-) ELSE IF "%option%" == "-J" (
+) ELSE IF "%option%" == "-j" (
 	SHIFT 
 	IF NOT "%arg:~0,1%" == "-" (
 		SET JAVA_HOME=%arg%
@@ -124,7 +124,7 @@ IF "%option%" == "-k" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
-	SET JJFLAG=y
+	SET JFLAG=y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -181,9 +181,9 @@ CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
 CALL :getconf SetJavaHome !CONF!
 
-IF "!JJFLAG!" == "" (
+IF "!JFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (
-		REM Overrides all JAVA_HOME settings unless -J specified
+		REM Overrides all JAVA_HOME settings unless -j specified
 		SET JAVA_HOME=!SetJavaHome!
 	)
 )
@@ -255,7 +255,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_ktab!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-A!_C_OFF!] [!_C_ARG!-s !_C_OPT!salt!_C_OFF!^|!_C_ARG!-f!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_OFF!!_C_ARG!-k !_C_OPT!krb5_ktname!_C_OFF!] [!_C_ARG!-J !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_OPT!principal_name!_C_OFF!]
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_ktab!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-A!_C_OFF!] [!_C_ARG!-s !_C_OPT!salt!_C_OFF!^|!_C_ARG!-f!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_OFF!!_C_ARG!-k !_C_OPT!krb5_ktname!_C_OFF!] [!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_OPT!principal_name!_C_OFF!]
 	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_ktname!_C_OFF!   Specify keytab !_C_ENV!KRB5_KTNAME!_C_OFF! (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME!!_C_OFF!^)
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any default value of !_C_ENV!KRB5_KTNAME!_C_OFF!
 	ECHO   !_C_ARG!-A!_C_OFF!               New keys are appended to keytab
@@ -268,9 +268,9 @@ EXIT /B 0
 	ECHO   !_C_ARG!-f!_C_OFF!               Request salt from KDC
 	ECHO   !_C_ARG!-V!_C_OFF!               Print Java version and exit
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
 

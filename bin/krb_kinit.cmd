@@ -105,10 +105,10 @@ IF "%option%" == "-c" (
 	SET DDFLAG=y
 ) ELSE IF "%option%" == "-M" (
 	SHIFT
-	IF NOT "!JJFLAG!" == "" SET ERRFLAG=Y
+	IF NOT "!JFLAG!" == "" SET ERRFLAG=Y
 	SET KINITOPTS=!KINITOPTS! -C
 	SET MMFLAG=y
-) ELSE IF "%option%" == "-J" (
+) ELSE IF "%option%" == "-j" (
 	SHIFT 
 	IF NOT "!MMFLAG!" == "" SET ERRFLAG=Y
 	IF NOT "%arg:~0,1%" == "-" (
@@ -118,7 +118,7 @@ IF "%option%" == "-c" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
-	SET JJFLAG=y
+	SET JFLAG=y
 ) ELSE IF "%option%" == "-V" (
 	SHIFT
 	SET VVFLAG=y
@@ -214,9 +214,9 @@ CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
 CALL :getconf SetJavaHome !CONF!
 
-IF "!JJFLAG!" == "" (
+IF "!JFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (
-		REM Overrides all JAVA_HOME settings unless -J specified
+		REM Overrides all JAVA_HOME settings unless -j specified
 		SET JAVA_HOME=!SetJavaHome!
 	)
 )
@@ -242,7 +242,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_kinit !_C_OFF![!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-J !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-C!_C_OFF!^|!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-k !_C_OFF![!_C_ARG!-t !_C_OPT!krb5_ktname!_C_OFF!]] [!_C_OPT!principal_name!_C_OFF!]
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_kinit !_C_OFF![!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-C!_C_OFF!^|!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-k !_C_OFF![!_C_ARG!-t !_C_OPT!krb5_ktname!_C_OFF!]] [!_C_OPT!principal_name!_C_OFF!]
 
 	ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-C!_C_OFF!               Unset any default value of !_C_ENV!KRB5CCNAME!_C_OFF!>&2
@@ -256,9 +256,9 @@ EXIT /B 0
 	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug
 	ECHO   !_C_ARG!-M!_C_OFF!               Use MIT Kerberos
 	IF NOT "!JAVA_HOME!" == "" (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
-		ECHO   !_C_ARG!-J!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
+		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
 	ECHO   !_C_ARG!-V!_C_OFF!               Print Java version and exit
