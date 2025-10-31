@@ -30,7 +30,7 @@ If the _userPrincipalName_ differs from the _sAMAccountName_ within Active Direc
 
 ## Quick Start
 
-The first step is to generate the files required for configuration. This is done with **krb_conf**. Note that `SQLDEV_HOME` must be set:
+The first step is to generate the files required for configuration. This is done with **krb_conf**. Note that `SQLDEV_HOME` must be set in the environment or supplied on the command line with **-h** (add **-H** to write to the registry). In this example of the output of the usage message we can see that the former is the case.
 
 <p align="center" spacing="10">
     <kbd>
