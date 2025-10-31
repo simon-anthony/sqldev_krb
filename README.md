@@ -79,6 +79,13 @@ and **SQLcl**:
     </kbd>
 </p>
 
+Next, check that you can connect with SQLcl:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_sql-usage.png" />
+    </kbd>
+</p>
 
 
 ## Background
