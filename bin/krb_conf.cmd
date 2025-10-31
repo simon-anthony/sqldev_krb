@@ -377,7 +377,7 @@ IF NOT "!PREFS!" == "" (
 	ECHO    !_C_PRF!Credential Cache File   !_C_OFF! !_KERBEROS_CACHE!
 	
 	ECHO    !_C_PRF!Use Oracle Client!_C_OFF!        !_UOC!
-	ECHO    !_C_PRF!Use OCT/Thick driver!_C_OFF!     unset
+	ECHO    !_C_PRF!Use OCI/Thick driver!_C_OFF!     unset
 
 	
 	REM If these values are not yet written - no matter JAAS setting will be used
