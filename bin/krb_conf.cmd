@@ -92,6 +92,13 @@ IF "%option%" == "-c" (
 ) ELSE IF "%option%" == "-p" (
 	SHIFT
 	SET PFLAG=Y
+	SET PREFS=Y
+	IF NOT "!PPFLG!" == "" SET ERRFLAG=Y
+) ELSE IF "%option%" == "-P" (
+	SHIFT
+	SET PREFS=Y
+	IF NOT "!PFLG!" == "" SET ERRFLAG=Y
+	SET PPFLAG=Y
 ) ELSE IF "%option%" == "-v" (
 	SHIFT
 	SET VFLAG=Y
@@ -337,7 +344,7 @@ IF !MAJOR! GTR 21 (
 	ECHO AddVMOption -Djava.security.manager=disallow>> !SQLDEV_HOME!\sqldeveloper\bin\kerberos.conf
 )
 
-IF NOT "!PFLAG!" == "" (
+IF NOT "!PREFS!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\sed.exe" (
 		ECHO !_C_ERR!!PROG!!_C_OFF!: install Git for Windows to use -p option>&2
 		EXIT /B 1
@@ -348,14 +355,42 @@ IF NOT "!PFLAG!" == "" (
 		ECHO !_C_ERR!!PROG!!_C_OFF!: cannot open !PREFS_FILE!>&2
 		EXIT /B 1
 	)
-	REM if not there add:
+
+	SET _UOC=unchanged
+	IF NOT "!PPFLAG!" == "" (
+		SET KERBEROS_CACHE=
+		SET KERBEROS_CONFIG=
+		SET _UOC=unset
+	) 
+
+	REM TODO: if not there add:
 	REM       <value n="KERBEROS_CACHE" v="C:/Users/demo/AppData/Local/krb5cc_demo"/>
 	REM       <value n="KERBEROS_CONFIG" v="C:/Oracle/jdk-25.0.1/conf/security/krb5.conf"/>
-	ECHO !_C_MSG!!PROG!!_C_OFF!: updating preferences: !PREFS_FILE!
-	ECHO  KERBEROS_CACHE = !KERBEROS_CACHE! | sed "s;\\\\\{1,\\};\\\;g"
-	ECHO  KERBEROS_CONFIG = !KERBEROS_CONFIG! | sed "s;\\\\\{1,\\};\\\;g"
+	REM
+	ECHO !_C_MSG!!PROG!!_C_OFF!: updating preferences:
 
-	sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; }' "!PREFS_FILE!"
+	SET _KERBEROS_CONFIG=!KERBEROS_CONFIG!
+	CALL :escape !_KERBEROS_CONFIG!
+	ECHO    !_C_PRF!Config File (krb5.conf^) !_C_OFF! !_KERBEROS_CONFIG!
+	SET _KERBEROS_CACHE=!KERBEROS_CACHE!
+	CALL :escape !_KERBEROS_CACHE!
+	ECHO    !_C_PRF!Credential Cache File   !_C_OFF! !_KERBEROS_CACHE!
+	
+	ECHO    !_C_PRF!Use Oracle Client!_C_OFF!        !_UOC!
+	ECHO    !_C_PRF!Use OCT/Thick driver!_C_OFF!     unset
+
+	
+	REM If these values are not yet written - no matter JAAS setting will be used
+	REM NB Kerberos will fail if you have
+	REM        USE_THICK_DRIVER=true 
+	REM    even with UseClient=false 
+	REM    Later InstantCLient and OracleHome clients are able to use JDBC and JAAS
+
+	IF NOT "!PPFLAG!" == "" (
+		sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; } ; /n="UseClient"/ {s@v=".*"@v="false"@; } ; /n="USE_THICK_DRIVER"/ {s@v=".*"@v="false"@; }' "!PREFS_FILE!" 
+	) ELSE (
+		sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; } ; /n="USE_THICK_DRIVER"/ {s@v=".*"@v="false"@;} ' "!PREFS_FILE!"
+	)
 )
 
 IF NOT "!WFLAG!" == "" (
@@ -390,12 +425,13 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: krb_conf !_C_OFF![!_C_ARG!-h !_C_OPT!sqldev_home!_C_OFF! [!_C_ARG!-H!_C_OFF!]] [!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!!_C_OFF!] [!_C_ARG!-j !_C_OPT!java_home!_C_OFF! !_C_OFF![!_C_ARG!-w!_C_OFF!]]^|!_C_ARG!-u!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-r!_C_OFF!] [!_C_ARG!-E!_C_OFF!]!_C_OFF! [!_C_ARG!-t !_C_OPT!file!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!]!_C_OFF!>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: krb_conf !_C_OFF![!_C_ARG!-h !_C_OPT!sqldev_home!_C_OFF! [!_C_ARG!-H!_C_OFF!]] [!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!!_C_OFF!] [!_C_ARG!-j !_C_OPT!java_home!_C_OFF! !_C_OFF![!_C_ARG!-w!_C_OFF!]]^|!_C_ARG!-u!_C_OFF!] [!_C_ARG!-p!_C_OFF!^|!_C_ARG!-P!_C_OFF!] [!_C_ARG!-r!_C_OFF!] [!_C_ARG!-E!_C_OFF!]!_C_OFF! [!_C_ARG!-t !_C_OPT!file!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!]!_C_OFF!>&2
 	ECHO   !_C_ARG!-h!_C_OFF! !_C_OPT!sqldev_home!_C_OFF!   Specify SQL Developer home to override !_C_ENV!SQLDEV_HOME!_C_OFF! (default: !_SQLDEV_HOME_SOURCE!!SQLDEV_HOME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-H!_C_OFF!               Set !_C_OPT!sqldev_home!_C_OFF! environment variable in the !_C_REG!registry!_C_OFF!, first>&2
 	ECHO                     attempt HKEY_LOCAL_MACHINE and fallback to HKEY_CURRENT_USER>&2
 	ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
-	ECHO   !_C_ARG!-p!_C_OFF!               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences>&2
+	ECHO   !_C_ARG!-p!_C_OFF!               Update product-preferences>&2
+	ECHO   !_C_ARG!-P!_C_OFF!               Clear product-preferences>&2
 	ECHO   !_C_ARG!-r!_C_OFF!               Resolve krb5.conf parameters>&2
 	ECHO   !_C_ARG!-v!_C_OFF!               Print SQL Developer version and exit>&2
 	ECHO   !_C_ARG!-E!_C_OFF!               Escape rather than canonicalize paths for preferences files>&2
@@ -477,6 +513,7 @@ EXIT /B 0
 
 REM escape: escape windows paths 
 :escape str
+	IF "%~1" == "" EXIT /B 0
 	FOR %%a IN ("\=\\\\") DO (
 		CALL SET %~1=%%%~1:%%~a%%
 	)

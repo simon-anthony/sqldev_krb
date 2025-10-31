@@ -8,6 +8,7 @@ SET _C_ARG=[93m
 SET _C_OPT=[33m
 SET _C_CFG=[32m
 SET _C_JAA=[38;5;115m
+SET _C_PRF=[38;5;60m
 SET _C_REG=[36m
 SET _C_OFF=[0m
 SET _C_BLD=[1m
