@@ -83,6 +83,40 @@ and **SQLcl**:
     </kbd>
 </p>
 
+### Create a Keytab
+
+We have the option for JAAS to use a keytab to create its own credential cache.
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_ktab-usage.png" />
+    </kbd>
+</p>
+
+In this example, we specify a later Java home in order that the -f options can be used to fetch the seed used for the principal from the KDC.
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_ktab-exec.png" />
+    </kbd>
+</p>
+
+We can list the keytab:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_klist-usage.png" />
+    </kbd>
+</p>
+
+by specifying **-k**:
+
+<p align="center" spacing="10">
+    <kbd>
+        <img src="media/krb_klist-exec.png" />
+    </kbd>
+</p>
+
 ### Connection
 
 Next, check that you can connect with SQLcl. Here are the options:
