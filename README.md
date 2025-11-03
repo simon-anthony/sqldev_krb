@@ -138,7 +138,7 @@ In this example, `KRB5_CONFIG` is already set in the environment to somewhere we
 
 ## Background
 
-In general, there are two mechanisms possible to achieve passwordless login when the user has not been automatically authenticated to the realm upon login, for example, via PAM/sshd on UNIX/Linux systems or vi login to a Windows domain.
+In general, there are two mechanisms possible to achieve passwordless login when the user has not been automatically authenticated to the realm upon login, for example, via PAM/sshd on UNIX/Linux systems or via login to a Windows domain.
 
 ### PKINIT
 
@@ -307,12 +307,17 @@ Default principal: demo@EXAMPLE.COM, 1 entry found.
 To set up the environment for Kerberos for SQL Developer
 
 <pre class=console><code>> <b>krb_conf -p -h C:\Oracle\sqldeveloper</b>
-Template krb5.conf: C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf
+krb_conf: creating startup scripts: krb_sqldeveloper.cmd krb_sqlcl.cmd
+krb_conf: creating Desktop shortcuts: sqldeveloper sql
+krb_conf: writing properties to kerberos.conf
+krb_conf: updating preferences:
+   Config File (krb5.conf)  C:/Oracle/sqldeveloper/jdk/jre/conf/security/krb5.conf
+   Credential Cache File    C:/Users/demo/AppData/Local/krb5cc_demo
+   Use Oracle Client        unchanged
+   Use OCI/Thick driver     unset
+krb_conf: creating JAAS login configuration C:\Users\demo\.java.login.config
+krb_conf: template krb5.conf copied to C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf
         1 file(s) copied.
-Creating Desktop shortcut: sqldeveloper
-Updating preferences: C:\Users\demo\AppData\Roaming\SQL Developer\system24.3.1.347.1826\o.sqldeveloper\product-preferences.xml
- KERBEROS_CACHE = C:/Users/demo/AppData/Local/krb5cc_demo
- KERBEROS_CONFIG = C:/Oracle/sqldeveloper/jdk/jre/conf/security/krb5.conf
 </code></pre>
 
 This will set appropriate configurationn parameters and files and create script whcih will get a new ticket before starting the GUI. If Git for Windows is installed it will also create
