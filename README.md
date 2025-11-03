@@ -93,7 +93,7 @@ We have the option for JAAS to use a keytab to create its own credential cache.
     </kbd>
 </p>
 
-In this example, we specify a later Java home in order that the -f options can be used to fetch the seed used for the principal from the KDC.
+In this example, we specify a later Java home in order that the **-f** option can be used to fetch the seed used for the principal from the KDC.
 
 <p align="center" spacing="10">
     <kbd>
@@ -361,9 +361,9 @@ Oracle {
   debug=false;
 };
 ```
-The following command shows login to SQLcl using JAAS (**-j**)
+The following command shows login to SQLcl using JAAS (**-J**)
 
-<pre class=console><code>> <b>krb_sql -j -x  -k C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf -t C:\Oracle\network\admin OMS</b>
+<pre class=console><code>> <b>krb_sql -J -x  -k C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf -t C:\Oracle\network\admin OMS</b>
 
 Picked up JAVA_TOOL_OPTIONS: -Djava.security.auth.login.config=C:\Users\demo\.java.login.config -Doracle.net.KerberosJaasLoginModule=Oracle
 
@@ -394,7 +394,7 @@ Note that appropriate Java properties have been set in the `JAVA_TOOL_OPTIONS` e
 A useful way to check what wil be run is to use the *echo* mode to print the command and any factors affecting execution:
 
 
-<pre class=console><code>> <b>krb_sql -e -j -x -k C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf -t C:\Oracle\network\admin OMS</b>
+<pre class=console><code>> <b>krb_sql -e -J -x -k C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf -t C:\Oracle\network\admin OMS</b>
 KRB5_CONFIG=C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf
 KRB5CCNAME=C:\Users\demo\AppData\Local\krb5cc_demo
 TNS_ADMIN=C:\Oracle\network\admin
@@ -404,7 +404,7 @@ sql -kerberos -thin -noupdates -tnsadmin C:\Oracle\network\admin -krb5_config C:
 
 Another example - this shows that without overriding the location of the kerberos configuration file setting from the command line (**-k**) the system configuration file has been picked up from the environment variable `KRB5_CONFIG`. This may not give us the login required.
 
-<pre class=console><code>> <b>krb_sql -e -j -x -t C:\Oracle\network\admin OMS</b>
+<pre class=console><code>> <b>krb_sql -e -J -x -t C:\Oracle\network\admin OMS</b>
 KRB5_CONFIG=C:\ProgramData\Kerberos\krb5.conf
 KRB5CCNAME=C:\Users\demo\AppData\Local\krb5cc_demo
 TNS_ADMIN=C:\Oracle\network\admin
@@ -422,18 +422,21 @@ In common with the other programs in this package, type the [help](#krb_sql) opt
 
 ### krb_conf
 ```text
-Usage: krb_conf [-h sqldev_home [-H]] [-c krb5ccname] [-J java_home [-w]]|-u] [-p] [-r] [-E]
+Usage: krb_conf [-h sqldev_home [-H]] [-c krb5ccname] [-j java_home [-w]]|-u] [-p|-P] [-r] [-E] [-t file] [-V]
   -h sqldev_home   Specify SQL Developer home to override SQLDEV_HOME (default: C:\Oracle\sqldeveloper)
-  -H               Set sqldev_home in the system wide environment
+  -H               Set sqldev_home environment variable in the registry, first
+                    attempt HKEY_LOCAL_MACHINE and fallback to HKEY_CURRENT_USER
   -c krb5ccname    Specify KRB5CCNAME (default: FILE:%{LOCAL_APPDATA}/krb5cc_%{username})
-  -p               Update KERBEROS_CACHE and KERBEROS_CONFIG in product-preferences
+  -p               Update product-preferences
+  -P               Clear product-preferences
   -r               Resolve krb5.conf parameters
   -v               Print SQL Developer version and exit
   -E               Escape rather than canonicalize paths for preferences files
-  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+  -j java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   -w               Write value of java_home to product.conf
   -u               Unset java_home in product.conf
+  -t file          Install and use file as a template krb5.conf
   -V               Print Java version and exit
 ```
 
@@ -448,7 +451,7 @@ Usage: krb_kdestroy [-c] [-k]
 
 ### krb_kinit
 ```text
-Usage: krb_kinit [-e] [-D] [-V] [-M|-J java_home] [-x] [-C|-c krb5ccname] [-K|-k [-t krb5_ktname]] [principal_name]
+Usage: krb_kinit [-e] [-D] [-V] [-M|-j java_home] [-x] [-C|-c krb5ccname] [-K|-k [-t krb5_ktname]] [principal_name]
   -c krb5ccname    Specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -C               Unset any default value of KRB5CCNAME
   -k               Use default keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
@@ -458,14 +461,14 @@ Usage: krb_kinit [-e] [-D] [-V] [-M|-J java_home] [-x] [-C|-c krb5ccname] [-K|-k
   -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
   -D               Turn on krb5.debug
   -M               Use MIT Kerberos
-  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+  -j java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   -V               Print Java version and exit
 ```
 
 ### krb_klist
 ```text
-Usage: krb_klist [-M|-J java_home] [-e] [-V] [-c|-k] [name]
+Usage: krb_klist [-M|-j java_home] [-e] [-V] [-c|-k] [name]
   -c               Specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -k               Specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -e               Echo the command only
@@ -473,7 +476,7 @@ Usage: krb_klist [-M|-J java_home] [-e] [-V] [-c|-k] [name]
   -D               Turn on krb5.debug
   -M               Use MIT Kerberos
   -V               Print Java version and exit
-  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+  -j java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   name             The cache or keytab of which to list the contents
 When no cache or keytab is specified the default action is to search for all credential caches
@@ -481,7 +484,7 @@ When no cache or keytab is specified the default action is to search for all cre
 
 ### krb_ktab
 ```text
-Usage: krb_ktab [-e] [-V] [-x] [-A] [-s salt|-f] [-K|-k krb5_ktname] [-J java_home] [-p] [-x] [principal_name]
+Usage: krb_ktab [-e] [-V] [-x] [-A] [-s salt|-f] [-K|-k krb5_ktname] [-j java_home] [-p] [-x] [principal_name]
   -k krb5_ktname   Specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -K               Unset any default value of KRB5_KTNAME
   -A               New keys are appended to keytab
@@ -490,10 +493,10 @@ Usage: krb_ktab [-e] [-V] [-x] [-A] [-s salt|-f] [-K|-k krb5_ktname] [-J java_ho
   -v               Verbose messages
   -D               Turn on krb5.debug
   -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -s salt          Specify the salt to use
+  -s salt          Specify the salt to use e.g. if sAMAccountName does not match userPrincipalName
   -f               Request salt from KDC
   -V               Print Java version and exit
-  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+  -j java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   Options -s and -f only supported with Java >=19
 ```
@@ -513,27 +516,26 @@ Usage: krb_pkinit [-e] [-x] [-C|-c krb5ccname>] [-d dir] [-D dir] [-A dir]
 
 ### krb_sql
 ```text
-Usage: krb_sql [-e] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-j[-w]] [-J java_home] [-x] -p|tns_alias
+Usage: krb_sql [-e] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-J[-w]] [-j java_home] [-x] -p|tns_alias
   -k krb5_config   Specify KRB5_CONFIG (default: C:\ProgramData\Kerberos\krb5.conf)
   -K               Unset any value of KRB5_CONFIG i.e. use internal default
   -L               Unset any value of KRB5_CONFIG and internal default i.e. use DNS SRV lookup
-  -t tns_admin     Specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
-                    if not in environment try registry
-  -c krb5ccname    Specify KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
+  -t tns_admin     Specify TNS_ADMIN (default: C:\Oracle\network\admin)
+                    if not in environment try preferences then try registry
   -C               Unset any default value of KRB5CCNAME
   -e               Echo the command only
   -i               Install a template startup.sql
-  -j               Use JAAS. The environment variable JAAS_CONFIG can be set to use
+  -J               Use JAAS. The environment variable JAAS_CONFIG can be set to use
                     another login file (default: C:\Users\demo\.java.login.config)
   -w               Overwrite JAAS configuration with internal defaults
   -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
-  -J java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
+  -j java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   -p               Prompt the user for tns_alias
 
 Usage: krb_sql -a [-t tns_admin]
   -a               Print aliases
-  -t tns_admin     Specify TNS_ADMIN (default: C:\Oracle\client_home\network\admin)
+  -t tns_admin     Specify TNS_ADMIN (default: C:\Oracle\network\admin)
 ```
 
 ## Building MIT Kerberos with PKINIT Enabled for Windows 11 

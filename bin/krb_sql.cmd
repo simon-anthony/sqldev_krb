@@ -56,10 +56,24 @@ IF "%JAVA_HOME%" == "" (
 	SET _JAVA_HOME_SOURCE=!_C_ENV!
 )
 
-REM If TNS_ADMIN not in environment get from registry, may be overridden later by command line
+REM If TNS_ADMIN not in environment or preferencesm get from registry,
+REM may be overridden later by command line
+IF "!TNS_ADMIN!" == "" (
+	SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
+	CALL :getprop VER_FULL !PROPS!
+	SET PREFS_FILE=%APPDATA%\SQL Developer\system!VER_FULL!\o.sqldeveloper\product-preferences.xml
+	IF EXIST "!PREFS_FILE!" (
+		FOR /F "delims==/ tokens=3 usebackq" %%i IN (`FINDSTR "TNS_NAMES_DIR.*v=" "!PREFS_FILE!"`) DO SET TNS_ADMIN=%%~i
+		SET _TNS_SOURCE=!_C_PRF!
+	)
+)
 IF "!TNS_ADMIN!" == "" (
 	CALL :regquery TNS_ADMIN
 	SET _TNS_SOURCE=!_C_REG!
+)
+IF "!TNS_ADMIN!" == "" (
+	SET TNS_ADMIN=TNS_ADMIN
+	SET _TNS_SOURCE=!_C_ERR!
 )
 
 IF "%SQLDEV_HOME%" == "" (
@@ -207,6 +221,12 @@ IF "%1" == "" (
 )
 
 IF NOT "!TNS_ADMIN!" == "" (
+	IF "!TNS_ADMIN!" == "TNS_ADMIN" (
+		IF NOT "%~1" == "-?"  (
+			ECHO !_C_ERR!!PROG!!_C_OFF!: TNS_ADMIN is not set>&2
+			EXIT /B 1
+		)
+	)
 	IF NOT EXIST "!TNS_ADMIN!\tnsnames.ora" (
 		IF "!EFLAG!" == "" (
 			IF "!ERRFLAG!" == "" (
@@ -366,7 +386,7 @@ EXIT /B 0
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! i.e. use !_C_INT!internal!_C_OFF! default>&2
 	ECHO   !_C_ARG!-L!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! and !_C_INT!internal!_C_OFF! default i.e. use !_C_DNS!DNS SRV!_C_OFF! lookup>&2
 	ECHO   !_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!     Specify !_C_ENV!TNS_ADMIN!_C_OFF! (default: !_TNS_SOURCE!!TNS_ADMIN!!_C_OFF!^)>&2
-	ECHO                     if not in !_C_ENV!environment!_C_OFF! try !_C_REG!registry!_C_OFF!>&2
+	ECHO                     if not in !_C_ENV!environment!_C_OFF! try !_C_PRF!preferences!_C_OFF! then try !_C_REG!registry!_C_OFF!>&2
 	IF NOT "!JJFLAG!" == "" (
 		ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!JAAS!_C_OFF!^)>&2
 		C

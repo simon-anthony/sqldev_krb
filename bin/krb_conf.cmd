@@ -389,7 +389,19 @@ IF NOT "!PREFS!" == "" (
 	IF NOT "!PPFLAG!" == "" (
 		sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; } ; /n="UseClient"/ {s@v=".*"@v="false"@; } ; /n="USE_THICK_DRIVER"/ {s@v=".*"@v="false"@; }' "!PREFS_FILE!" 
 	) ELSE (
-		sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; } ; /n="USE_THICK_DRIVER"/ {s@v=".*"@v="false"@;} ' "!PREFS_FILE!"
+		REM add if not there
+		grep -qs KERBEROS_CACHE "!PREFS_FILE!" 
+		IF ERRORLEVEL 1 (
+			sed --in-place=.bak '/hash n="DBConfig"/ a \ ^
+      ^<value n="KERBEROS_CACHE" v="!KERBEROS_CACHE!"^> ' "!PREFS_FILE!"
+		)
+		grep -qs KERBEROS_CONFIG "!PREFS_FILE!"
+		IF ERRORLEVEL 1 (
+			sed --in-place=.bak '/hash n="DBConfig"/ a \ ^
+      ^<value n="KERBEROS_CONFIG" v="!KERBEROS_CONFIG!"^> ' "!PREFS_FILE!"
+		)
+
+		sed --in-place=.bak '/KERBEROS_CACHE/ {s@v=".*"@v="'!KERBEROS_CACHE!'"@; } ; /KERBEROS_CONFIG/ {s@v=".*"@v="'!KERBEROS_CONFIG!'"@; } ; /n="USE_THICK_DRIVER"/ {s@v=".*"@v="false"@; }' "!PREFS_FILE!"
 	)
 )
 
