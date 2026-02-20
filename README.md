@@ -1,6 +1,6 @@
 # SQL Developer Kerberos Utiltities
 
-These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication. They also assist in simplifying what is a fairly complex process in ensuring that the settings are correct for authentication with Kerberos for SQL developer and SQLcl.
+These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication. They also assist in simplifying what is a fairly complex process in ensuring that the settings are correct for authentication with Kerberos for SQL Developer and SQLcl.
 
 Some enhanced functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option. 
 
@@ -368,7 +368,7 @@ Oracle {
 ```
 The following command shows login to SQLcl using JAAS (**-J**)
 
-<pre class=console><code>> <b>krb_sql -J -x  -k C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf -t C:\Oracle\network\admin OMS</b>
+<pre class=console><code>> <b>krb_sql -J -x -k C:\Oracle\sqldeveloper\jdk\jre\conf\security\krb5.conf -t C:\Oracle\network\admin OMS</b>
 
 Picked up JAVA_TOOL_OPTIONS: -Djava.security.auth.login.config=C:\Users\demo\.java.login.config -Doracle.net.KerberosJaasLoginModule=Oracle
 
