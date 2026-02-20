@@ -1,6 +1,6 @@
 # SQL Developer Kerberos Utiltities
 
-These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication.
+These tools are for the special cases on Windows where it is not possible to use the LSA as a ticket cache for authentication. They also assist in simplifying what is a fairly complex process in ensuring that the settings are correct for authentication with Kerberos for SQL developer and SQLcl.
 
 Some enhanced functioanilty requires the installation of [Git for Windows](https://git-scm.com/downloads/win). Ensure to select the Unix tools option. 
 
@@ -214,11 +214,11 @@ Using an external JDK is supported by SQL Developer. However, only versions up t
 The **krb_conf** utility will make the appropriate checks when configuring SQL Developer to use an external JDK.
 
 
-## Creating a Credentials Cache
+## Obtaining Credentials 
 
 We shall consider the two mechanisms: PKINIT and the use of a keytab. Of the two, PKINIT is the more complex as we shall need an external implementation of **kinit** with PKINIT support compiled in. Neither **kinit** from the SQL Developer JDK nor **okinit** supplied with the Oracle client have this feature.
 
-As the simplet proposition, the use of a keytab is therefore discussed first.
+As the simplest proposition, the use of a keytab is therefore discussed first.
 
 ### Method 1 - Keytab
 
@@ -266,7 +266,7 @@ Key tab: C:\Users\demo\AppData\Local\krb5_demo.keytab, 4 entries found.
          Time stamp: Oct 14, 2025 12:47:57
 </code></pre>
 
-The next step is to request a ticket (to store in our credentials cache.) We can do this with **krb_kinit** by specifiying the **-k** option to tell it to use a keytab (either specified or the default one):
+If the tool we are using requires a credentials cache we can generate one from the keytab. In most cases this won't be necessary as the keytab can be used to generate the credentials which are stored in memory. This step involves requesting a ticket (to store in our credentials cache.) We can do this with **krb_kinit** by specifiying the **-k** option to tell it to use a keytab (either specified or the default one):
 
 <pre class=console><code>> <b>krb_kinit -k</b>
 New ticket is stored in cache file C:\Users\demo\AppData\Local\krb5cc_demo
@@ -320,7 +320,7 @@ krb_conf: template krb5.conf copied to C:\Oracle\sqldeveloper\jdk\jre\conf\secur
         1 file(s) copied.
 </code></pre>
 
-This will set appropriate configurationn parameters and files and create script whcih will get a new ticket before starting the GUI. If Git for Windows is installed it will also create
+This will set appropriate configuration parameters and files and create scripts. If Git for Windows is installed it will also create
 a shortcut on the Desktop to this script and set the SQL Developer preferences.
 
 
