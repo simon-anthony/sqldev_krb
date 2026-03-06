@@ -473,7 +473,7 @@ Usage: krb_kinit [-e] [-D] [-V] [-M|-j java_home] [-x] [-C|-c krb5ccname] [-K|-k
 
 ### krb_klist
 ```text
-Usage: krb_klist [-M|-j java_home] [-e] [-V] [-c|-k] [name]
+Usage: krb_klist [-M|-j java_home] [-e] [=D] [-V] [-c|-k] [name]
   -c               Specifies credential cache KRB5CCNAME (default: C:\Users\demo\AppData\Local\krb5cc_demo)
   -k               Specifies keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -e               Echo the command only
@@ -489,7 +489,7 @@ When no cache or keytab is specified the default action is to search for all cre
 
 ### krb_ktab
 ```text
-Usage: krb_ktab [-e] [-V] [-x] [-A] [-s salt|-f] [-K|-k krb5_ktname] [-j java_home] [-p] [-x] [principal_name]
+Usage: krb_ktab [-e] [-D] [-V] [-x] [-A] [-s salt|-f] [-K|-k krb5_ktname] [-j java_home] [-p] [-x] [principal_name]
   -k krb5_ktname   Specify keytab KRB5_KTNAME (default: C:\Users\demo\AppData\Local\krb5_demo.keytab)
   -K               Unset any default value of KRB5_KTNAME
   -A               New keys are appended to keytab
@@ -521,7 +521,7 @@ Usage: krb_pkinit [-e] [-x] [-C|-c krb5ccname>] [-d dir] [-D dir] [-A dir]
 
 ### krb_sql
 ```text
-Usage: krb_sql [-e] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-J[-w]] [-j java_home] [-x] -p|tns_alias
+Usage: krb_sql [-e] [-D] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-J[-w]] [-j java_home] [-x] -p|tns_alias
   -k krb5_config   Specify KRB5_CONFIG (default: C:\ProgramData\Kerberos\krb5.conf)
   -K               Unset any value of KRB5_CONFIG i.e. use internal default
   -L               Unset any value of KRB5_CONFIG and internal default i.e. use DNS SRV lookup
@@ -533,7 +533,7 @@ Usage: krb_sql [-e] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-J[-w]] [-j java
   -J               Use JAAS. The environment variable JAAS_CONFIG can be set to use
                     another login file (default: C:\Users\demo\.java.login.config)
   -w               Overwrite JAAS configuration with internal defaults
-  -x               Produce trace (in C:\Users\demo\AppData\Local\Temp\1\krb5_trace.log)
+  -x               Create JAAS with debug=true option
   -j java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
   -p               Prompt the user for tns_alias
