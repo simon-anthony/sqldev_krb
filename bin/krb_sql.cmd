@@ -342,6 +342,10 @@ IF NOT "!IFLAG!" == "" (
 	ECHO set highlighting comment foreground black>> !SQLPATH!\startup.sql
 	ECHO set sqlformat ansiconsole -config=!SQLPATH!\highlight.json>> !SQLPATH!\startup.sql
 	ECHO -- FORMAT RULES !SQLPATH!\formatter-rules.xml>> !SQLPATH!\startup.sql
+
+	IF EXIST !ETC!\highlight.json !SQLPATH! (
+		COPY /V !ETC!\highlight.json !SQLPATH!
+	)
 )
 
 IF NOT "!XFLAG!" == "" (
