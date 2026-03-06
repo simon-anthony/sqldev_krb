@@ -84,7 +84,7 @@ IF "%option%" == "-c" (
 	SET MMFLAG=y
 ) ELSE IF "%option%" == "-D" (
 	SHIFT
-	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
+	SET JAVA_TOOL_OPTIONS=-Dsun.security.krb5.debug=true
 	SET DDFLAG=y
 ) ELSE IF "%option%" == "-V" (
 	SHIFT
@@ -207,7 +207,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_klist!_C_OFF! [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-c!_C_OFF!^|!_C_ARG!!_C_ARG!-k!_C_OFF!] [!_C_OPT!name!_C_OFF!]>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_klist!_C_OFF! [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-c!_C_OFF!^|!_C_ARG!!_C_ARG!-k!_C_OFF!] [!_C_OPT!name!_C_OFF!]>&2
 	ECHO   !_C_ARG!-c!_C_OFF!               Specifies credential cache !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-k!_C_OFF!               Specifies keytab !_C_ENV!KRB5_KTNAME!_C_OFF! (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only>&2

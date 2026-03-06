@@ -101,7 +101,7 @@ IF "%option%" == "-c" (
 	SET XFLAG=y
 ) ELSE IF "%option%" == "-D" (
 	SHIFT
-	SET JAVA_TOOL_OPTIONS="-Dsun.security.krb5.debug=true"
+	SET JAVA_TOOL_OPTIONS=-Dsun.security.krb5.debug=true
 	SET DDFLAG=y
 ) ELSE IF "%option%" == "-M" (
 	SHIFT
@@ -242,26 +242,26 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_kinit !_C_OFF![!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-C!_C_OFF!^|!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-k !_C_OFF![!_C_ARG!-t !_C_OPT!krb5_ktname!_C_OFF!]] [!_C_OPT!principal_name!_C_OFF!]
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_kinit !_C_OFF![!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-C!_C_OFF!^|!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-k !_C_OFF![!_C_ARG!-t !_C_OPT!krb5_ktname!_C_OFF!]] [!_C_OPT!principal_name!_C_OFF!]>&2
 
 	ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-C!_C_OFF!               Unset any default value of !_C_ENV!KRB5CCNAME!_C_OFF!>&2
-	ECHO   !_C_ARG!-k!_C_OFF!               Use default keytab !_C_ENV!KRB5_KTNAME!_C_OFF! (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME!!_C_OFF!^)
+	ECHO   !_C_ARG!-k!_C_OFF!               Use default keytab !_C_ENV!KRB5_KTNAME!_C_OFF! (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME!!_C_OFF!^)>&2
 
-	ECHO   !_C_ARG!-t!_C_OFF! !_C_OPT!krb5_ktname!_C_OFF!   Specify keytab with !_C_OPT!krb5_ktname!_C_OFF!
+	ECHO   !_C_ARG!-t!_C_OFF! !_C_OPT!krb5_ktname!_C_OFF!   Specify keytab with !_C_OPT!krb5_ktname!_C_OFF!>&2
 
-	ECHO   !_C_ARG!-K!_C_OFF!               Unset any default value of !_C_ENV!KRB5_KTNAME!_C_OFF!
-	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only
-	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)
-	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug
-	ECHO   !_C_ARG!-M!_C_OFF!               Use MIT Kerberos
+	ECHO   !_C_ARG!-K!_C_OFF!               Unset any default value of !_C_ENV!KRB5_KTNAME!_C_OFF!>&2
+	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only>&2
+	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)>&2
+	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug>&2
+	ECHO   !_C_ARG!-M!_C_OFF!               Use MIT Kerberos>&2
 	IF NOT "!JAVA_HOME!" == "" (
 		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
 		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
-	ECHO   !_C_ARG!-V!_C_OFF!               Print Java version and exit
+	ECHO   !_C_ARG!-V!_C_OFF!               Print Java version and exit>&2
 ENDLOCAL
 EXIT /B 1
 

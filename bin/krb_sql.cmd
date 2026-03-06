@@ -157,6 +157,10 @@ IF "%option%" == "-k" (
 	SET KRB5CCNAME=
 	IF NOT "!CFLAG!" == "" SET ERRFLAG=Y
 	SET CCFLAG=Y
+) ELSE IF "%option%" == "-D" (
+	SHIFT
+	SET JAVA_TOOL_OPTIONS=-Dsun.security.krb5.debug=true
+	SET DDFLAG=y
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
 	SET EFLAG=Y
@@ -255,6 +259,11 @@ IF NOT "!WFLAG!" == "" (
 		SET ERRFLAG=Y
 	)
 )
+IF NOT "!XFLAG!" == "" (
+	IF "!WFLAG!" == "" (
+		SET ERRFLAG=Y
+	)
+)
 
 SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
 CALL :getprop VER_FULL !PROPS!
@@ -350,10 +359,11 @@ IF NOT "!WFLAG!" == "" (
 		)
 	)
 )
+
 IF NOT "!JJFLAG!" == "" (
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
 	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk
-	SET JAVA_TOOL_OPTIONS=-Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=!NAME!
+	SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=!NAME!
 	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
 	SET _KRB5CCNAME_SOURCE=!_C_JAA!
 )
@@ -380,7 +390,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF!]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF!>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF![!_C_ARG!-x!_C_OFF!]]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!]  !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF!>&2
 	IF NOT "!LLFLAG!" == "" SET KRB5_CONFIG=DNS
 	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!   Specify !_C_ENV!KRB5_CONFIG!_C_OFF! (default: !_KRB5_CONFIG_SOURCE!!KRB5_CONFIG!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! i.e. use !_C_INT!internal!_C_OFF! default>&2
@@ -389,7 +399,7 @@ EXIT /B 0
 	ECHO                     if not in !_C_ENV!environment!_C_OFF! try !_C_PRF!preferences!_C_OFF! then try !_C_REG!registry!_C_OFF!>&2
 	IF NOT "!JJFLAG!" == "" (
 		ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!JAAS!_C_OFF!^)>&2
-		C
+	) ELSE (
 		ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
 	)
 	ECHO   !_C_ARG!-C!_C_OFF!               Unset any default value of !_C_ENV!KRB5CCNAME!_C_OFF!>&2
@@ -398,7 +408,8 @@ EXIT /B 0
 	ECHO   !_C_ARG!-J!_C_OFF!               Use !_C_JAA!JAAS!_C_OFF!. The environment variable !_C_ENV!JAAS_CONFIG!_C_OFF! can be set to use>&2
         ECHO                     another login file (default: !_C_INT!!HOMEDRIVE!!HOMEPATH!\.java.login.config!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-w!_C_OFF!               Overwrite !_C_JAA!JAAS!_C_OFF! configuration with internal defaults>&2
-	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)>&2
+	ECHO   !_C_ARG!-x!_C_OFF!               Create !_C_JAA!JAAS!_C_OFF! with debug=true option>&2
+	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug>&2
 	IF NOT "!JAVA_HOME!" == "" (
 		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
