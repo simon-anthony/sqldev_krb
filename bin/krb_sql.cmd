@@ -410,7 +410,7 @@ EXIT /B 0
 	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only>&2
 	ECHO   !_C_ARG!-i!_C_OFF!               Install a template startup.sql>&2
 	ECHO   !_C_ARG!-J!_C_OFF!               Use !_C_JAA!JAAS!_C_OFF!. The environment variable !_C_ENV!JAAS_CONFIG!_C_OFF! can be set to use>&2
-        ECHO                     another login file (default: !_C_INT!!HOMEDRIVE!!HOMEPATH!\.java.login.config!_C_OFF!^)>&2
+	ECHO                     another login file (default: !_C_INT!!HOMEDRIVE!!HOMEPATH!\.java.login.config!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-w!_C_OFF!               Overwrite !_C_JAA!JAAS!_C_OFF! configuration with internal defaults>&2
 	ECHO   !_C_ARG!-x!_C_OFF!               Create !_C_JAA!JAAS!_C_OFF! with debug=true option>&2
 	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug>&2
