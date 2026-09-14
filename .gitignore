@@ -4,3 +4,5 @@ history*
 *.trc
 sqlnet.log
 .DS_Store
+*.un~
+*~

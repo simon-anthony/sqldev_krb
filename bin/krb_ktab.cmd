@@ -19,6 +19,11 @@ CALL %BIN%\COLOURS.CMD
 SET REALM=%USERDNSDOMAIN%
 SET PRINCIPAL=%USERNAME%@%REALM%
 
+SET JAVA_TOOL_OPTIONS=
+
+SET USERNAME=%USERNAME: =%
+CALL :toLower USERNAME
+
 IF "%KRB5_KTNAME%" == "" (
 	SET _KRB5_KTNAME_SOURCE=!_C_INT!
 ) ELSE (
@@ -167,7 +172,7 @@ IF NOT "!AAFLAG!" == "" (
 )
 
 IF NOT "!KRB5_KTNAME!" == "" (
-	SET KTABOPTS=!KTABOPTS! -k !KRB5_KTNAME!
+	SET KTABOPTS=!KTABOPTS! -k "!KRB5_KTNAME!"
 )
 
 IF NOT "!XFLAG!" == "" (
@@ -179,7 +184,7 @@ SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
 CALL :getprop VER_FULL !PROPS!
 CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
-CALL :getconf SetJavaHome !CONF!
+CALL :getconf SetJavaHome "!CONF!"
 
 IF "!JFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (

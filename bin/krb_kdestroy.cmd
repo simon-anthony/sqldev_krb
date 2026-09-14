@@ -16,6 +16,9 @@ SET REALM=%USERDNSDOMAIN%
 
 SET KLISTOPTS=
 
+SET USERNAME=%USERNAME: =%
+CALL :toLower USERNAME
+
 IF "%KRB5_CONFIG%" == "" (
 	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
 	REM %APPDATA%\krb5.conf is a fallback for MIT Kerberos5
@@ -62,13 +65,17 @@ SET arg=%~2
 IF "%option%" == "-k" (
 	SHIFT 
 	IF NOT "!KFLAG!" == "" GOTO usage
-	SET FILES=!FILES! !KRB5_KTNAME!
-	SET KFLAG=y
+	IF EXIST "!KRB5_KTNAME!" (
+		SET FILES=!FILES! "!KRB5_KTNAME!"
+		SET KFLAG=y
+	)
 ) ELSE IF "%option%" == "-c" (
 	SHIFT
 	IF NOT "!CFLAG!" == "" GOTO usage
-	SET FILES=!FILES! !KRB5CCNAME!
-	SET CFLAG=y
+	IF EXIST "!KRB5CCNAME!" (
+		SET FILES=!FILES! "!KRB5CCNAME!"
+		SET CFLAG=y
+	)
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
 	SET EFLAG=y
@@ -81,20 +88,22 @@ GOTO parse
 :endparse
 
 IF "!FILES!" == "" (
-	SET FILES=!KRB5CCNAME!
+	IF EXIST "!KRB5CCNAME!" (
+		SET FILES="!KRB5CCNAME!"
+	)
 )
-IF EXIST %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% (
-	SET FILES=!FILES! %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% 
+IF EXIST "%HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME%" (
+	SET FILES=!FILES! "%HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME%"
 )
 
 IF NOT "!ERRFLAG!" == "" GOTO usage
 
 IF NOT "!EFLAG!" == "" (
-	ECHO del !FILES! 
+	IF NOT "!FILES!" == "" ECHO DEL !FILES!
 	EXIT /B 0
 )
 
-DEL !FILES!
+IF NOT "!FILES!" == "" DEL !FILES!
 
 ENDLOCAL
 EXIT /B 0
@@ -107,3 +116,21 @@ EXIT /B 0
 	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only
 ENDLOCAL
 EXIT /B 1
+
+REM toUpper: make str uppercase
+:toUpper str
+	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
+		"j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
+		"s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0
+
+REM toLower: make str lowercase
+:toLower str
+	FOR %%a IN ("A=a" "B=b" "C=c" "D=d" "E=e" "F=f" "G=g" "H=h" "I=i"
+		"J=j" "K=k" "L=l" "M=m" "N=n" "O=o" "P=p" "Q=q" "R=r"
+		"S=s" "T=t" "U=u" "V=v" "W=w" "X=x" "Y=y" "Z=z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0

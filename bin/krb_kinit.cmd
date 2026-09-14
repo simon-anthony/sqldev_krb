@@ -16,6 +16,10 @@ SET REALM=%USERDNSDOMAIN%
 SET PRINCIPAL=
 
 SET KINITOPTS=
+SET JAVA_TOOL_OPTIONS=
+
+SET USERNAME=%USERNAME: =%
+CALL :toLower USERNAME
 
 IF "%KRB5_CONFIG%" == "" (
 	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
@@ -108,6 +112,10 @@ IF "%option%" == "-c" (
 	IF NOT "!JFLAG!" == "" SET ERRFLAG=Y
 	SET KINITOPTS=!KINITOPTS! -C
 	SET MMFLAG=y
+) ELSE IF "%option%" == "-A" (
+	SHIFT
+	SET KINITOPTS=!KINITOPTS! -A
+	SET AAFLAG=y
 ) ELSE IF "%option%" == "-j" (
 	SHIFT 
 	IF NOT "!MMFLAG!" == "" SET ERRFLAG=Y
@@ -178,7 +186,8 @@ IF "!MMFLAG!" == "" (
 )
 
 IF NOT "!KRB5CCNAME!" == "" (
-	SET KINITOPTS=!KINITOPTS! -c !KRB5CCNAME!
+	REM SET KINITOPTS=!KINITOPTS! -c !KRB5CCNAME!
+	SET KINITOPTS=!KINITOPTS! -c "!KRB5CCNAME!"
 )
 IF NOT "!KRB5_KTNAME!" == "" (
 	IF "!TFLAG!" == "" (
@@ -212,7 +221,7 @@ SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
 CALL :getprop VER_FULL !PROPS!
 CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
-CALL :getconf SetJavaHome !CONF!
+CALL :getconf SetJavaHome "!CONF!"
 
 IF "!JFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (
@@ -236,13 +245,13 @@ IF NOT "!ERRFLAG!" == "" GOTO usage
 
 SET PATH=!KRB5_BIN!;%PATH%
 
-kinit !KINITOPTS! !PRINCIPAL!
+kinit !KINITOPTS! -A !PRINCIPAL!
 
 ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_kinit !_C_OFF![!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-C!_C_OFF!^|!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-k !_C_OFF![!_C_ARG!-t !_C_OPT!krb5_ktname!_C_OFF!]] [!_C_OPT!principal_name!_C_OFF!]>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_kinit !_C_OFF![!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-A!_C_OFF!] [!_C_ARG!-M!_C_OFF!^|!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-C!_C_OFF!^|!_C_ARG!-c !_C_OPT!krb5ccname!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-k !_C_OFF![!_C_ARG!-t !_C_OPT!krb5_ktname!_C_OFF!]] [!_C_OPT!principal_name!_C_OFF!]>&2
 
 	ECHO   !_C_ARG!-c!_C_OFF! !_C_OPT!krb5ccname!_C_OFF!    Specify !_C_ENV!KRB5CCNAME!_C_OFF! (default: !_KRB5CCNAME_SOURCE!!KRB5CCNAME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-C!_C_OFF!               Unset any default value of !_C_ENV!KRB5CCNAME!_C_OFF!>&2
@@ -255,6 +264,7 @@ EXIT /B 0
 	ECHO   !_C_ARG!-x!_C_OFF!               Produce trace (in %TEMP%\krb5_trace.log)>&2
 	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug>&2
 	ECHO   !_C_ARG!-M!_C_OFF!               Use MIT Kerberos>&2
+	ECHO   !_C_ARG!-A!_C_OFF!               Do not include addresses in ticket request. Use if NAT>&2
 	IF NOT "!JAVA_HOME!" == "" (
 		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
@@ -265,6 +275,7 @@ EXIT /B 0
 ENDLOCAL
 EXIT /B 1
 
+REM toUpper: make str uppercase
 :toUpper str
 	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
 		"j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
@@ -273,6 +284,7 @@ EXIT /B 1
 	)
 EXIT /B 0
 
+REM toLower: make str lowercase
 :toLower str
 	FOR %%a IN ("A=a" "B=b" "C=c" "D=d" "E=e" "F=f" "G=g" "H=h" "I=i"
 		"J=j" "K=k" "L=l" "M=m" "N=n" "O=o" "P=p" "Q=q" "R=r"

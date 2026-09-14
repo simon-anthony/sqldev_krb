@@ -16,6 +16,10 @@ SET ORACLE_HOME=
 
 SET _TNS_SOURCE=!_C_ENV!
 SET SQLOPTS=-kerberos -thin -noupdates
+SET JAVA_TOOL_OPTIONS=
+
+SET USERNAME=%USERNAME: =%
+CALL :toLower USERNAME
 
 IF "%KRB5_CONFIG%" == "" (
 	REM set after SetJavaHome evaluation
@@ -87,6 +91,7 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	IF "%~1" == "-?"  GOTO usage
 	EXIT /B 1
 )
+SET VERBOSE=
 SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
 
 REM Define a Linefeed variable - the two lines after are significant
@@ -202,6 +207,10 @@ IF "%option%" == "-k" (
 		SET ERRFLAG=Y
 	)
 	SET JFLAG=Y
+) ELSE IF "%option%" == "-v" (
+	SHIFT
+	SET VFLAG=Y
+	SET VERBOSE=-verbose
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -245,11 +254,11 @@ IF NOT "!TNS_ADMIN!" == "" (
 IF NOT "!AFLAG!" == "" (
 	IF NOT EXIST "C:\Program Files\Git\usr\bin\awk.exe" (
 		ECHO !_C_ERR!!PROG!!_C_OFF!: install Git for Windows to use the -a option>&2
-		exit /B 1
+		EXIT /B 1
 	)
 	IF "!TNS_ADMIN!" == "" (
 		ECHO !_C_ERR!!PROG!!_C_OFF!: TNS_ADMIN not set or no default>&2
-		exit /B 1
+		EXIT /B 1
 	)
 	awk "/^[A-Z0-1]* =/ { print $1 }" %TNS_ADMIN%\tnsnames.ora
 	EXIT /B 0
@@ -269,7 +278,7 @@ SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
 CALL :getprop VER_FULL !PROPS!
 CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
-CALL :getconf SetJavaHome !CONF!
+CALL :getconf SetJavaHome "!CONF!"
 
 IF "!JFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (
@@ -308,7 +317,7 @@ IF NOT "!KRB5_CONFIG!" == "" (
 
 IF NOT "!KRB5CCNAME!" == "" (
 	REM JAAS set Cache
-	IF "!JJFLAG!" == "" SET SQLOPTS=!SQLOPTS! -krb5ccname !KRB5CCNAME!
+	IF "!JJFLAG!" == "" SET SQLOPTS=!SQLOPTS! -krb5ccname "!KRB5CCNAME!"
 )
 
 REM IF NOT "!ERRFLAG!" == "" GOTO usage
@@ -359,16 +368,16 @@ IF NOT "!XFLAG!" == "" (
 IF NOT "!WFLAG!" == "" (
 	IF "!ERRFLAG!" == "" (
 		IF "!EFLAG!" == "" (
-			IF EXIST !JAAS_CONFIG! DEL !JAAS_CONFIG!
+			IF EXIST "!JAAS_CONFIG!" DEL "!JAAS_CONFIG!"
 		)
 	)
 )
 
 IF NOT "!JJFLAG!" == "" (
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
-	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk
+	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk\jre
 	SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=!NAME!
-	IF NOT EXIST !JAAS_CONFIG! CALL :jaasconfig
+	IF NOT EXIST "!JAAS_CONFIG!" CALL :jaasconfig
 	SET _KRB5CCNAME_SOURCE=!_C_JAA!
 )
 IF NOT "!EFLAG!" == "" (
@@ -377,10 +386,10 @@ IF NOT "!EFLAG!" == "" (
 		ECHO KRB5CCNAME=!KRB5CCNAME!
 		ECHO TNS_ADMIN=!TNS_ADMIN!
 	)
-	IF NOT "!JJFLAG!" == "" (
+	REM IF NOT "!JJFLAG!" == "" (
 		ECHO JAVA_TOOL_OPTIONS: !JAVA_TOOL_OPTIONS!
-	)
-	ECHO sql %SQLOPTS% /@%alias%
+	REM )
+	ECHO sql %SQLOPTS% %VERBOSE% /@%alias%
 	EXIT /B 0
 )
 
@@ -388,7 +397,7 @@ IF NOT "!ERRFLAG!" == "" GOTO usage
 
 SET PATH="!SQLPATH!\bin";%PATH%
 
-sql %SQLOPTS% /@%alias%
+sql %SQLOPTS% %VERBOSE% /@%alias%
 
 ENDLOCAL
 EXIT /B 0
@@ -491,11 +500,11 @@ REM MB JAAS defaults for cache and keytab differ from MIT
 		CALL :krb5exp _KRB5_KTNAME JAAS 
 	)
 	CALL :canon _KRB5_KTNAME
-	ECHO !NAME! { > !JAAS_CONFIG!
-  	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> !JAAS_CONFIG!
-  	ECHO   refreshKrb5Config=true>> !JAAS_CONFIG!
-  	ECHO   doNotPrompt=true>> !JAAS_CONFIG!
-  	ECHO   useTicketCache=true>> !JAAS_CONFIG!
+	ECHO !NAME! { > "!JAAS_CONFIG!"
+  	ECHO   com.sun.security.auth.module.Krb5LoginModule required>> "!JAAS_CONFIG!"
+  	ECHO   refreshKrb5Config=true>> "!JAAS_CONFIG!"
+  	ECHO   doNotPrompt=true>> "!JAAS_CONFIG!"
+  	ECHO   useTicketCache=true>> "!JAAS_CONFIG!"
   	REM There are many combinations of KRB5CCNAME or -krb5ccname and ticketCache
 	IF NOT "!KRB5CCNAME!" == "" (
 		REM If not specified default is {user.home}{file.separator}krb5cc_{user.name}
@@ -506,29 +515,29 @@ REM MB JAAS defaults for cache and keytab differ from MIT
 			CALL :krb5exp _KRB5CCNAME JAAS
 		)
 		CALL :canon _KRB5CCNAME
-		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> !JAAS_CONFIG!
+		ECHO   ticketCache="FILE:!_KRB5CCNAME!">> "!JAAS_CONFIG!"
 	)
-  	ECHO   useKeyTab=true>> !JAAS_CONFIG!
+  	ECHO   useKeyTab=true>> "!JAAS_CONFIG!"
 	REM If not specified default is {user.home}{file.separator}krb5.keytab
-  	ECHO   keyTab="FILE:!_KRB5_KTNAME!">> !JAAS_CONFIG!
+  	ECHO   keyTab="FILE:!_KRB5_KTNAME!">> "!JAAS_CONFIG!"
 	REM Required to negotiate with KDC when requesting TGT
 	CALL :getuserprincipal PRINCIPAL
 	CALL :formatprincipal PRINCIPAL 
-  	REM ECHO   principal=!USERNAME!>> !JAAS_CONFIG!
-  	REM ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
-  	ECHO   principal="!PRINCIPAL!">> !JAAS_CONFIG!
-  	ECHO   storeKey=false>> !JAAS_CONFIG!
-  	ECHO   renewTGT=false>> !JAAS_CONFIG!
-  	ECHO   debug=!DEBUG!;>> !JAAS_CONFIG!
-	ECHO }; >> !JAAS_CONFIG!
+  	REM ECHO   principal=!USERNAME!>> "!JAAS_CONFIG!"
+  	REM ECHO   principal="!PRINCIPAL!">> "!JAAS_CONFIG!"
+  	ECHO   principal="!PRINCIPAL!">> "!JAAS_CONFIG!"
+  	ECHO   storeKey=false>> "!JAAS_CONFIG!"
+  	ECHO   renewTGT=false>> "!JAAS_CONFIG!"
+  	ECHO   debug=!DEBUG!;>> "!JAAS_CONFIG!"
+	ECHO }; >> "!JAAS_CONFIG!"
 EXIT /B
 
 REM getuserprincipal: set user to userPrincipalName (from AD or keytab)
 :getuserprincipal user
-	powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command Get-AdUser %USERNAME%> NUL 2>&1
+	powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command Get-AdUser "%USERNAME%"> NUL 2>&1
 	IF %ERRORLEVEL% EQU 0 (
 		REM get from AD
-		FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser %USERNAME% ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
+		FOR /f "tokens=1" %%i IN ('powershell -NoLogo -NoProfile -NonInteractive -OutputFormat Text -Command ^(Get-AdUser "%USERNAME%" ^^^| Select-Object UserPrincipalName^).UserPrincipalName') DO (CALL set %~1=%%i%%)
 	) ELSE (
 		REM get from keytab
 		REM since this batch file has set KRB5_KTNAME we may have to expand the variables

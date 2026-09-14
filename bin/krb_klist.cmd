@@ -15,6 +15,10 @@ CALL %BIN%\COLOURS.CMD
 SET REALM=%USERDNSDOMAIN%
 
 SET KLISTOPTS=
+SET JAVA_TOOL_OPTIONS=
+
+SET USERNAME=%USERNAME: =%
+CALL :toLower USERNAME
 
 IF "%KRB5_CONFIG%" == "" (
 	REM %PROGRAMDATA%\Kerberos\krb5.conf is system default for MIT Kerberos5
@@ -62,6 +66,7 @@ IF "%1" == "" GOTO endparse
 
 SET option=%~1
 SET arg=%~2
+REM SET arg=%~sp2
 
 IF "%option%" == "-c" (
 	SHIFT 
@@ -162,7 +167,7 @@ SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
 CALL :getprop VER_FULL !PROPS!
 CALL :getprop VER !PROPS!
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
-CALL :getconf SetJavaHome !CONF!
+CALL :getconf SetJavaHome "!CONF!"
 
 IF "!JFLAG!" == "" (
 	IF NOT "!SetJavaHome!" == "" (
@@ -194,11 +199,11 @@ IF NOT "!VVFLAG!" == "" (
 
 IF NOT "!ERRFLAG!" == "" GOTO usage
 
-klist !KLISTOPTS! !NAME!
+klist !KLISTOPTS! "!NAME!"
 
 IF "!CFLAG!" == "" (
 	IF "!KFLAG!" == "" (
-		IF EXIST %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME% (
+		IF EXIST "%HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME%" (
 			klist !KLISTOPTS! %HOMEDRIVE%%HOMEPATH%\krb5cc_%USERNAME%
 		)
 	)
@@ -225,6 +230,24 @@ EXIT /B 0
 	ECHO When no cache or keytab is specified the default action is to search for all credential caches>&2
 ENDLOCAL
 EXIT /B 1
+
+REM toUpper: make str uppercase
+:toUpper str
+	FOR %%a IN ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
+		"j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
+		"s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0
+
+REM toLower: make str lowercase
+:toLower str
+	FOR %%a IN ("A=a" "B=b" "C=c" "D=d" "E=e" "F=f" "G=g" "H=h" "I=i"
+		"J=j" "K=k" "L=l" "M=m" "N=n" "O=o" "P=p" "Q=q" "R=r"
+		"S=s" "T=t" "U=u" "V=v" "W=w" "X=x" "Y=y" "Z=z") DO (
+		CALL SET %~1=%%%~1:%%~a%%
+	)
+EXIT /B 0
 
 REM javaversion: print Java version
 :javaversion java_home vers
