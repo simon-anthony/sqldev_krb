@@ -521,7 +521,7 @@ Usage: krb_pkinit [-e] [-x] [-C|-c krb5ccname>] [-d dir] [-D dir] [-A dir]
 
 ### krb_sql
 ```text
-Usage: krb_sql [-e] [-D] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-J[-w]] [-j java_home] [-x] -p|tns_alias
+Usage: krb_sql [-e] [-D] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-J[-w]] [-j java_home] [-s sqlcl_home] [-x] -p|tns_alias
   -k krb5_config   Specify KRB5_CONFIG (default: C:\ProgramData\Kerberos\krb5.conf)
   -K               Unset any value of KRB5_CONFIG i.e. use internal default
   -L               Unset any value of KRB5_CONFIG and internal default i.e. use DNS SRV lookup
@@ -536,6 +536,7 @@ Usage: krb_sql [-e] [-D] [-K|-L|-k krb5_config] [-t tns_admin] [-i] [-J[-w]] [-j
   -x               Create JAAS with debug=true option
   -j java_home     Specify JAVA_HOME (default: C:\Oracle\sqldeveloper\jdk\jre) if unset
                     use SetJavaHome from product.conf or SQL Developer built-in JDK
+  -s sqlcl_home    Specify SQLCL_HOME (default: C:\Oracle\sqldeveloper\sqldeveloper) if unset
   -p               Prompt the user for tns_alias
 
 Usage: krb_sql -a [-t tns_admin]
