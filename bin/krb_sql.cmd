@@ -60,6 +60,12 @@ IF "%JAVA_HOME%" == "" (
 	SET _JAVA_HOME_SOURCE=!_C_ENV!
 )
 
+IF "%SQLCL_HOME%" == "" (
+	SET _SQLCL_HOME_SOURCE=!_C_INT!
+) ELSE (
+	SET _SQLCL_HOME_SOURCE=!_C_ENV!
+)
+
 REM If TNS_ADMIN not in environment or preferencesm get from registry,
 REM may be overridden later by command line
 IF "!TNS_ADMIN!" == "" (
@@ -92,7 +98,6 @@ IF NOT EXIST !SQLDEV_HOME!\sqldeveloper.exe (
 	EXIT /B 1
 )
 SET VERBOSE=
-SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
 
 REM Define a Linefeed variable - the two lines after are significant
 set LF=^
@@ -207,6 +212,15 @@ IF "%option%" == "-k" (
 		SET ERRFLAG=Y
 	)
 	SET JFLAG=Y
+) ELSE IF "%option%" == "-s" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET SQLCL_HOME=%arg%
+		SET _SQLCL_HOME_SOURCE=!_C_OPT!
+		SHIFT
+	) ELSE (
+		SET ERRFLAG=Y
+	)
 ) ELSE IF "%option%" == "-v" (
 	SHIFT
 	SET VFLAG=Y
@@ -292,6 +306,22 @@ IF NOT "%JAVA_HOME%" == "" (
 		IF "!ERRFLAG!" == "" EXIT /B 1
 		SET ERRFLAG=Y
 	)
+)
+
+IF NOT "%SQLCL_HOME%" == "" (
+	IF NOT EXIST "%SQLCL_HOME%\bin\sql.exe" (
+		ECHO !_C_ERR!!PROG!!_C_OFF!: invalid SQLCL_HOME %SQLCL_HOME%>&2
+		IF "!ERRFLAG!" == "" EXIT /B 1
+		SET ERRFLAG=Y
+	)
+	SET SQLPATH=!SQLCL_HOME!
+) ELSE (
+	IF NOT EXIST "%SQLDEV_HOME%\sqldeveloper\bin\sql.exe" (
+		ECHO !_C_ERR!!PROG!!_C_OFF!: SQLDEV_HOME %SQLDEV_HOME% does not include SQLcl>&2
+		IF "!ERRFLAG!" == "" EXIT /B 1
+		SET ERRFLAG=Y
+	)
+	SET SQLPATH=!SQLDEV_HOME!\sqldeveloper
 )
 
 IF "!LLFLAG!" == "" (
@@ -403,7 +433,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF![!_C_ARG!-x!_C_OFF!]]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!]  !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF!>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF![!_C_ARG!-x!_C_OFF!]]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-s!_C_OFF! !_C_OPT!sqlcl_home!_C_OFF!] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF!>&2
 	IF NOT "!LLFLAG!" == "" SET KRB5_CONFIG=DNS
 	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!   Specify !_C_ENV!KRB5_CONFIG!_C_OFF! (default: !_KRB5_CONFIG_SOURCE!!KRB5_CONFIG!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! i.e. use !_C_INT!internal!_C_OFF! default>&2
@@ -429,6 +459,11 @@ EXIT /B 0
 		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!SQLDEV_HOME!\jdk\jre!_C_OFF!^) if unset>&2
 	)
 	ECHO                     use SetJavaHome from !_C_CFG!product.conf!_C_OFF! or SQL Developer built-in JDK>&2
+	IF NOT "!SQLCL_HOME!" == "" (
+		ECHO   !_C_ARG!-s!_C_OFF! !_C_OPT!sqlcl_home!_C_OFF!    Specify !_C_ENV!SQLCL_HOME!_C_OFF! (default: !_SQLCL_HOME_SOURCE!!SQLCL_HOME!!_C_OFF!^) if unset>&2
+	) ELSE (
+		ECHO   !_C_ARG!-s!_C_OFF! !_C_OPT!sqlcl_home!_C_OFF!    Specify !_C_ENV!SQLCL_HOME!_C_OFF! (default: !_SQLCL_HOME_SOURCE!!SQLDEV_HOME!\sqldeveloper!_C_OFF!^) if unset>&2
+	)
 	ECHO   !_C_ARG!-p!_C_OFF!               Prompt the user for !_C_OPT!tns_alias!_C_OFF!>&2
 
 	ECHO.>&2
