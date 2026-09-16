@@ -360,6 +360,7 @@ IF NOT "!PFLAG!" == "" (
 	SET p=%~1
 )
 SET alias=%p:*@=%
+SHIFT
 
 IF NOT "!IFLAG!" == "" (
 	REM Later versions of sqlcl support:
@@ -419,7 +420,7 @@ IF NOT "!EFLAG!" == "" (
 	REM IF NOT "!JJFLAG!" == "" (
 		ECHO JAVA_TOOL_OPTIONS: !JAVA_TOOL_OPTIONS!
 	REM )
-	ECHO sql %SQLOPTS% %VERBOSE% /@%alias%
+	ECHO sql %SQLOPTS% %VERBOSE% /@%alias% %1 %2 %3
 	EXIT /B 0
 )
 
@@ -427,13 +428,13 @@ IF NOT "!ERRFLAG!" == "" GOTO usage
 
 SET PATH="!SQLPATH!\bin";%PATH%
 
-sql %SQLOPTS% %VERBOSE% /@%alias%
+sql %SQLOPTS% %VERBOSE% /@%alias% %1 %2 %3
 
 ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF![!_C_ARG!-x!_C_OFF!]]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-s!_C_OFF! !_C_OPT!sqlcl_home!_C_OFF!] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF!>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF![!_C_ARG!-x!_C_OFF!]]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-s!_C_OFF! !_C_OPT!sqlcl_home!_C_OFF!] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF! [@!_C_OPT!start!_C_OFF!]...>&2
 	IF NOT "!LLFLAG!" == "" SET KRB5_CONFIG=DNS
 	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!   Specify !_C_ENV!KRB5_CONFIG!_C_OFF! (default: !_KRB5_CONFIG_SOURCE!!KRB5_CONFIG!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! i.e. use !_C_INT!internal!_C_OFF! default>&2
