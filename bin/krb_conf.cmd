@@ -163,10 +163,10 @@ IF NOT "!HHFLAG!" == "" (
 )
 
 SET PROPS=!SQLDEV_HOME!\sqldeveloper\bin\version.properties
-CALL :getprop VER_FULL !PROPS!
-CALL :getprop VER !PROPS!
+CALL :getprop VER_FULL "!PROPS!"
+CALL :getprop VER "!PROPS!"
 SET CONF=%APPDATA%\sqldeveloper\!VER!\product.conf
-CALL :getconf SetJavaHome !CONF!
+CALL :getconf SetJavaHome "!CONF!"
 
 IF "!JFLAG!" == "" (
 	IF "!UFLAG!" == "" (
