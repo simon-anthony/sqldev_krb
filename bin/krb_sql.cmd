@@ -326,7 +326,6 @@ IF NOT "!WWFLAG!" == "" (
 			ECHO !_C_ERR!!PROG!!_C_OFF!: wallet does not exist>&2
 			EXIT /B 1
 		)
-		SET _WALLET_SOURCE=!_C_ERR!
 	)
 )
 
@@ -499,6 +498,7 @@ EXIT /B 0
 	ECHO   !_C_ARG!-v!_C_OFF!               Turn on verbose operation>&2
 	ECHO   !_C_ARG!-T!_C_OFF!               TLS with partial distinguished name (DN^) matching using certificates obtained>&2
 	ECHO                     from Mircosoft Certificate Store (MCS^)>&2
+	IF NOT EXIST "!WALLET!"\ewallet.p12 SET _WALLET_SOURCE=!_C_ERR!
 	ECHO   !_C_ARG!-W!_C_OFF! [!_C_OPT!wallet!_C_OFF!]      Use !_C_OPT!wallet!_C_OFF! instead of MCS (default: !_WALLET_SOURCE!!WALLET!!_C_OFF!^)>&2
 	IF NOT "!JAVA_HOME!" == "" (
 		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
