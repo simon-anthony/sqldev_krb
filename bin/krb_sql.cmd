@@ -15,8 +15,20 @@ CALL %BIN%\COLOURS.CMD
 SET ORACLE_HOME=
 
 SET _TNS_SOURCE=!_C_ENV!
+SET _WALLET_SOURCE=!_C_INT!
+
+SET WALLET_ROOT=%USERPROFILE%\ORACLE\WALLETS
+SET WALLET=%WALLET_ROOT%\DEFAULT
+
 SET SQLOPTS=-kerberos -thin -noupdates
 SET JAVA_TOOL_OPTIONS=
+
+REM For a wallet:
+REM SET JAVA_TOOL_OPTIONS=-Doracle.net.wallet_location=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY='C:\Users\Simon Anthony\wallet\tls'))) -Doracle.net.authentication_services=(TCPS) -Doracle.net.ssl_server_dn_match=true
+REM For MCS, note that this does not work:
+REM SET JAVA_TOOL_OPTIONS=-Doracle.net.wallet_location=(SOURCE=(METHOD=MCS)) -Doracle.net.authentication_services=(TCPS) -Doracle.net.ssl_server_dn_match=true
+REM Instead we need:
+REM SET JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=NONE -Djavax.net.ssl.trustStoreType=Windows-ROOT -Djavax.net.ssl.keyStore=NONE -Djavax.net.ssl.keyStoreType=Windows-MY -Doracle.net.authentication_services=(TCPS) -Doracle.net.ssl_server_dn_match=true
 
 SET USERNAME=%USERNAME: =%
 CALL :toLower USERNAME
@@ -169,7 +181,7 @@ IF "%option%" == "-k" (
 	SET CCFLAG=Y
 ) ELSE IF "%option%" == "-D" (
 	SHIFT
-	SET JAVA_TOOL_OPTIONS=-Dsun.security.krb5.debug=true
+	SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Dsun.security.krb5.debug=true
 	SET DDFLAG=y
 ) ELSE IF "%option%" == "-e" (
 	SHIFT
@@ -221,10 +233,28 @@ IF "%option%" == "-k" (
 	) ELSE (
 		SET ERRFLAG=Y
 	)
+	SET SFLAG=Y
 ) ELSE IF "%option%" == "-v" (
 	SHIFT
-	SET VFLAG=Y
 	SET VERBOSE=-verbose
+	SET VFLAG=Y
+) ELSE IF "%option%" == "-T" (
+	SHIFT
+	IF "!WWFLAG!" == "" (
+		SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Djavax.net.ssl.trustStore=NONE -Djavax.net.ssl.trustStoreType=Windows-ROOT -Djavax.net.ssl.keyStore=NONE -Djavax.net.ssl.keyStoreType=Windows-MY -Doracle.net.authentication_services=^(TCPS^) -Doracle.net.ssl_server_dn_match=true
+	)
+	SET TTFLAG=Y
+) ELSE IF "%option%" == "-W" (
+	SHIFT 
+	IF NOT "%arg:~0,1%" == "-" (
+		SET WALLET=%arg%
+		REM If no path specified then prefix WALLET_ROOT
+		IF "!WALLET:\= !" == "!WALLET!" SET WALLET=!WALLET_ROOT!\!WALLET!
+		SET _WALLET_SOURCE=!_C_OPT!
+		SHIFT
+	) 
+	SET JAVA_TOOL_OPTIONS=-Doracle.net.wallet_location=^(SOURCE=^(METHOD=FILE^)^(METHOD_DATA=^(DIRECTORY='!WALLET!'^)^)^) -Doracle.net.authentication_services=^(TCPS^) -Doracle.net.ssl_server_dn_match=true
+	SET WWFLAG=Y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
 	SET arg=%option%
 	REM SHIFT
@@ -285,6 +315,18 @@ IF NOT "!WFLAG!" == "" (
 IF NOT "!XFLAG!" == "" (
 	IF "!WFLAG!" == "" (
 		SET ERRFLAG=Y
+	)
+)
+IF NOT "!WWFLAG!" == "" (
+	IF "!TTFLAG!" == "" (
+		SET ERRFLAG=Y
+	)
+	IF NOT EXIST "!WALLET!"\ewallet.p12 (
+		IF NOT "!ERRFLG!" == "" (
+			ECHO !_C_ERR!!PROG!!_C_OFF!: wallet does not exist>&2
+			EXIT /B 1
+		)
+		SET _WALLET_SOURCE=!_C_ERR!
 	)
 )
 
@@ -407,8 +449,8 @@ IF NOT "!WFLAG!" == "" (
 IF NOT "!JJFLAG!" == "" (
 	REM can use the later JDK_JAVA_OPTIONS in place of JAVA_TOOL_OPTIONS
 	IF "!JAVA_HOME!" == "" SET JAVA_HOME=!SQLDEV_HOME!\jdk\jre
-	SET JAVA_TOOL_OPTIONS=!JAVA_TOOL_OPTIONS! -Djava.security.auth.login.config=!JAAS_CONFIG! -Doracle.net.KerberosJaasLoginModule=!NAME!
-	IF NOT EXIST "!JAAS_CONFIG!" CALL :jaasconfig
+	
+	IF NOT EXIST "!JAAS_CONFIG!" CALL :lsjaasconfig
 	SET _KRB5CCNAME_SOURCE=!_C_JAA!
 )
 IF NOT "!EFLAG!" == "" (
@@ -434,7 +476,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF![!_C_ARG!-x!_C_OFF!]]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-s!_C_OFF! !_C_OPT!sqlcl_home!_C_OFF!] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF! [@!_C_OPT!start!_C_OFF!]...>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!!PROG!!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_ARG!-L!_C_OFF!^|!_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!] [!_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!] [!_C_ARG!-i!_C_OFF!] [!_C_ARG!-J!_C_OFF![!_C_ARG!-w!_C_OFF![!_C_ARG!-x!_C_OFF!]]] [!_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-s!_C_OFF! !_C_OPT!sqlcl_home!_C_OFF!] [!_C_ARG!-T!_C_OFF![!_C_ARG!-W!_C_OFF! [!_C_OPT!wallet!_C_OFF!]]] !_C_ARG!-p!_C_OFF!^|!_C_OPT!tns_alias!_C_OFF! [@!_C_OPT!start!_C_OFF!]...>&2
 	IF NOT "!LLFLAG!" == "" SET KRB5_CONFIG=DNS
 	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_config!_C_OFF!   Specify !_C_ENV!KRB5_CONFIG!_C_OFF! (default: !_KRB5_CONFIG_SOURCE!!KRB5_CONFIG!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any value of !_C_ENV!KRB5_CONFIG!_C_OFF! i.e. use !_C_INT!internal!_C_OFF! default>&2
@@ -448,12 +490,16 @@ EXIT /B 0
 	)
 	ECHO   !_C_ARG!-C!_C_OFF!               Unset any default value of !_C_ENV!KRB5CCNAME!_C_OFF!>&2
 	ECHO   !_C_ARG!-e!_C_OFF!               Echo the command only>&2
+	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug>&2
 	ECHO   !_C_ARG!-i!_C_OFF!               Install a template startup.sql>&2
 	ECHO   !_C_ARG!-J!_C_OFF!               Use !_C_JAA!JAAS!_C_OFF!. The environment variable !_C_ENV!JAAS_CONFIG!_C_OFF! can be set to use>&2
 	ECHO                     another login file (default: !_C_INT!!HOMEDRIVE!!HOMEPATH!\.java.login.config!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-w!_C_OFF!               Overwrite !_C_JAA!JAAS!_C_OFF! configuration with internal defaults>&2
 	ECHO   !_C_ARG!-x!_C_OFF!               Create !_C_JAA!JAAS!_C_OFF! with debug=true option>&2
-	ECHO   !_C_ARG!-D!_C_OFF!               Turn on krb5.debug>&2
+	ECHO   !_C_ARG!-v!_C_OFF!               Turn on verbose operation>&2
+	ECHO   !_C_ARG!-T!_C_OFF!               TLS with partial distinguished name (DN^) matching using certificates obtained>&2
+	ECHO                     from Mircosoft Certificate Store (MCS^)>&2
+	ECHO   !_C_ARG!-W!_C_OFF! [!_C_OPT!wallet!_C_OFF!]      Use !_C_OPT!wallet!_C_OFF! instead of MCS (default: !_WALLET_SOURCE!!WALLET!!_C_OFF!^)>&2
 	IF NOT "!JAVA_HOME!" == "" (
 		ECHO   !_C_ARG!-j!_C_OFF! !_C_OPT!java_home!_C_OFF!     Specify !_C_ENV!JAVA_HOME!_C_OFF! (default: !_JAVA_HOME_SOURCE!!JAVA_HOME!!_C_OFF!^) if unset>&2
 	) ELSE (
@@ -468,7 +514,7 @@ EXIT /B 0
 	ECHO   !_C_ARG!-p!_C_OFF!               Prompt the user for !_C_OPT!tns_alias!_C_OFF!>&2
 
 	ECHO.>&2
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_sql!_C_OFF! !_C_ARG!-a!_C_OFF! [!_C_ARG!-t !_C_OPT!tns_admin!_C_OFF!]>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!!PROG!!_C_OFF! !_C_ARG!-a!_C_OFF! [!_C_ARG!-t !_C_OPT!tns_admin!_C_OFF!]>&2
 	ECHO   !_C_ARG!-a!_C_OFF!               Print aliases>&2
 	ECHO   !_C_ARG!-t!_C_OFF! !_C_OPT!tns_admin!_C_OFF!     Specify !_C_ENV!TNS_ADMIN!_C_OFF! (default: !_TNS_SOURCE!!TNS_ADMIN!!_C_OFF!^)>&2
 ENDLOCAL

@@ -260,7 +260,7 @@ ENDLOCAL
 EXIT /B 0
 
 :usage
-	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!krb_ktab!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-A!_C_OFF!] [!_C_ARG!-s !_C_OPT!salt!_C_OFF!^|!_C_ARG!-f!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_OFF!!_C_ARG!-k !_C_OPT!krb5_ktname!_C_OFF!] [!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_OPT!principal_name!_C_OFF!]>&2
+	ECHO !_C_ERR!Usage!_C_OFF!: !_C_BLD!!PROG!!_C_OFF! [!_C_ARG!-e!_C_OFF!] [!_C_ARG!-D!_C_OFF!!_C_OFF!] [!_C_ARG!-V!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_ARG!-A!_C_OFF!] [!_C_ARG!-s !_C_OPT!salt!_C_OFF!^|!_C_ARG!-f!_C_OFF!] [!_C_ARG!-K!_C_OFF!^|!_C_OFF!!_C_ARG!-k !_C_OPT!krb5_ktname!_C_OFF!] [!_C_ARG!-j !_C_OPT!java_home!_C_OFF!] [!_C_ARG!-p!_C_OFF!] [!_C_ARG!-x!_C_OFF!] [!_C_OPT!principal_name!_C_OFF!]>&2
 	ECHO   !_C_ARG!-k!_C_OFF! !_C_OPT!krb5_ktname!_C_OFF!   Specify keytab !_C_ENV!KRB5_KTNAME!_C_OFF! (default: !_KRB5_KTNAME_SOURCE!!KRB5_KTNAME!!_C_OFF!^)>&2
 	ECHO   !_C_ARG!-K!_C_OFF!               Unset any default value of !_C_ENV!KRB5_KTNAME!_C_OFF!>&2
 	ECHO   !_C_ARG!-A!_C_OFF!               New keys are appended to keytab>&2
