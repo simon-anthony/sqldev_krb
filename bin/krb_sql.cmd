@@ -253,6 +253,7 @@ IF "%option%" == "-k" (
 		SET _WALLET_SOURCE=!_C_OPT!
 		SHIFT
 	) 
+	REM TODO: Add oracle.net.ssl_server_cert_dn
 	SET JAVA_TOOL_OPTIONS=-Doracle.net.wallet_location=^(SOURCE=^(METHOD=FILE^)^(METHOD_DATA=^(DIRECTORY='!WALLET!'^)^)^) -Doracle.net.authentication_services=^(TCPS^) -Doracle.net.ssl_server_dn_match=true
 	SET WWFLAG=Y
 ) ELSE IF NOT "%option:~0,1%" == "-" (
